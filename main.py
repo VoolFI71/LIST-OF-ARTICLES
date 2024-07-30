@@ -35,6 +35,7 @@ from random import *
 import sqlite3
 from pydantic_models import User as model_user
 from pydantic_models import List as model_list
+from pydantic_models import Reg_User
 import json
 app = FastAPI()
 
@@ -59,18 +60,16 @@ def create_list(list: model_list):
 def get_users():
     with sqlite3.connect("db/database.db") as db:
         cursor = db.cursor()
-        cursor.execute("SELECT * FROM test")
-
+        cursor.execute("SELECT * FROM logins")
         rows = cursor.fetchall()
-        respons = [row for row in rows]
-    return respons
+    return rows
 
 @app.delete("/user/delete/{nick}")
 def delete_user(nick: str):
     try:
         with sqlite3.connect("db/database.db") as db:
             cursor = db.cursor()
-            cursor.execute("DELETE FROM test WHERE nick=?", (nick))
+            cursor.execute("DELETE FROM logins WHERE nick=?", (nick))
             db.commit()
             if cursor.rowcount == 0:  # Проверка, был ли удален хоть один элемент
                 raise HTTPException(status_code=404, detail="User with {nick} not found")
@@ -80,12 +79,24 @@ def delete_user(nick: str):
 
 
 @app.post("/user/register")
-def create_user(user: model_user):
+def create_user(user: Reg_User):
+    if user.password!=user.password2:
+        return {"message": "passwords are incorrect"}
     try:
         with sqlite3.connect("db/database.db") as db:
             cursor = db.cursor()
-            cursor.execute("INSERT INTO test (nick, password) VALUES (?, ?)", (user.nick, user.password))
+            cursor.execute("INSERT INTO logins (nick, password) VALUES (?, ?)", (user.nick, user.password))
             db.commit()
     except sqlite3.Error as e:
         raise HTTPException(status_code=500, detail=str(e))
     return {"message": "User created successfully"}
+
+@app.get("/user/login")
+def login_user(user: model_user):
+    with sqlite3.connect("db/database.db") as db:
+        cursor = db.cursor()
+        cursor.execute("""SELECT * FROM logins WHERE nick={user.nick}""")
+        rows = cursor.fetchall()
+        if rows[1]==user.password:
+            return {"message": "You are loggin"}
+        return {"message": "You are no loggin"}
