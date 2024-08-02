@@ -8,6 +8,5 @@ class User(BaseModel):
 class Reg_User(User):
     password2: str
 class List(BaseModel):
-    nick: str
     title: str
     description: str

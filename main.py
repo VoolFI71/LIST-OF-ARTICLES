@@ -38,6 +38,21 @@ import jwt
 
 app = FastAPI()
 
+secret_key = "key"
+
+def check_auth(request: Request):
+    token = request.cookies.get("jwt")
+    if not token :
+        raise HTTPException(status_code=403, detail="Аунтефикация не пройдена")  # Если токена нет, возвращаем 403
+    try:
+        # Попытка декодировать токен
+        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
+        return payload  # Если декодирование успешно, возвращаем полезную нагрузку (payload)
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=403, detail="JWT token has expired")  # Если токен просрочен
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=403, detail="Invalid JWT token")  # Если токен недействителен
+
 @app.get("/")
 def get_lists(response: Response, cookie: str=Cookie(None)):
     if cookie is None:
@@ -52,14 +67,34 @@ def get_lists(response: Response, cookie: str=Cookie(None)):
     return {"Тексты": respons, "Cookie": cookie_value}
 
 @app.post("/")
-def create_list(list: model_list):
+def create_list(list: model_list, request: Request):
+    token = request.cookies.get("jwt")
+    try:
+        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
+        with sqlite3.connect("db/database.db") as db:
+            cursor = db.cursor()
+            cursor.execute("INSERT INTO lists (nick, title, description) VALUES (?, ?, ?)", (payload["sub"], list.title, list.description))
+            db.commit()
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=403, detail="JWT token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=403, detail="Invalid JWT token")
+
     with sqlite3.connect("db/database.db") as db:
         cursor = db.cursor()
         cursor.execute("INSERT INTO lists (nick, title, description) VALUES (?, ?, ?)", (list.nick, list.title, list.description))
         db.commit()
     return {"message": "List created successfully"}
 
-@app.get("/users")
+@app.get("/users", dependencies=[Depends(check_auth)])
+def get_users():
+    with sqlite3.connect("db/database.db") as db:
+        cursor = db.cursor()
+        cursor.execute("SELECT * FROM logins")
+        rows = cursor.fetchall()
+    return rows
+
+@app.get("/userss")
 def get_users():
     with sqlite3.connect("db/database.db") as db:
         cursor = db.cursor()
@@ -72,7 +107,7 @@ def delete_user(nick: str):
     try:
         with sqlite3.connect("db/database.db") as db:
             cursor = db.cursor()
-            cursor.execute("DELETE FROM logins WHERE nick=?", (nick))
+            cursor.execute("DELETE FROM logins WHERE nick=?", (nick,))
             db.commit()
             if cursor.rowcount == 0:  # Проверка, был ли удален хоть один элемент
                 raise HTTPException(status_code=404, detail="User with {nick} not found")
@@ -100,8 +135,11 @@ def login_user(user: model_user, response: Response):
         cursor = db.cursor()
         cursor.execute("SELECT * FROM logins WHERE nick=?", (user.nick,))
         rows = cursor.fetchall()
-        print(rows[0][1])
+
         if rows and rows[0][1]==user.password:
-            token = jwt.encode({"sub": user.nick, "hash_password": user.password}, "your_secret_key", algorithm='HS256')
+            token = jwt.encode({"sub": user.nick, "hash_password": user.password, "exp": int(time.time())+30}, secret_key, algorithm='HS256')
+            response.set_cookie(key="jwt", value=token, httponly=True, secure=False)
+            cursor.execute("UPDATE logins SET token=? WHERE nick=?", (token, user.nick))
+            db.commit()
             return {"message": "You are logged in", "token": token}
         return {"message": "You are no logged"}
