@@ -37,9 +37,8 @@ from uuid import uuid4
 import jwt
 from routers.auth import router_auth
 from routers.delete_user import router_delete_user
+from config import secret_key
 app = FastAPI()
-
-secret_key = "key"
 
 def check_auth(request: Request):
     token = request.cookies.get("jwt")
@@ -56,8 +55,6 @@ def check_auth(request: Request):
 
 @app.get("/")
 def get_lists(response: Response, cookie: str=Cookie(None)):
-    if cookie is None:
-        pass
     with sqlite3.connect("db/database.db") as db:
         cursor = db.cursor()
         cursor.execute("SELECT * FROM lists")
@@ -67,11 +64,11 @@ def get_lists(response: Response, cookie: str=Cookie(None)):
         cookie_value = str(f"{str(session)} , {str(int(time.time()))} , {str(int(time.time())+600)}").split(",")
     return {"Тексты": respons, "Cookie": cookie_value}
 
-@app.post("/")
-def create_list(list: model_list, request: Request):
+@app.post("/create/list")
+def page_of_create_list(list: model_list, request: Request):
     token = request.cookies.get("jwt")
     if not token:
-           raise HTTPException(status_code=401, detail="Missing JWT token")
+        return RedirectResponse(url="/user/login", status_code=302)
     try:
         payload = jwt.decode(token, secret_key, algorithms=['HS256'])
         with sqlite3.connect("db/database.db") as db:
@@ -79,16 +76,12 @@ def create_list(list: model_list, request: Request):
             cursor.execute("INSERT INTO lists (nick, title, description) VALUES (?, ?, ?)", (payload["sub"], list.title, list.description))
             db.commit()
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=403, detail="JWT token has expired")
+        raise HTTPException(status_code=403, detail="JWT токен больше не работает, зайдите в аккаунт заново")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=403, detail="Invalid JWT token")
+    except sqlite3.Error as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка в базе данных: {str(e)}")
     return {"message": "List created successfully"}
-
-@app.get("/create/list")
-def create_page_list(request: Request):
-    token = request.cookies.get("jwt")
-    if not token:
-        return RedirectResponse(url="/user/login", status_code=302)
 
 @app.get("/users", dependencies=[Depends(check_auth)])
 def get_users():
@@ -98,27 +91,13 @@ def get_users():
         rows = cursor.fetchall()
     return rows
 
-@app.get("/userss")
+@app.get("/admin/users")
 def get_users():
     with sqlite3.connect("db/database.db") as db:
         cursor = db.cursor()
         cursor.execute("SELECT * FROM logins")
         rows = cursor.fetchall()
     return rows
-
-@app.delete("/user/delete/{nick}")
-def delete_user(nick: str):
-    try:
-        with sqlite3.connect("db/database.db") as db:
-            cursor = db.cursor()
-            cursor.execute("DELETE FROM logins WHERE nick=?", (nick,))
-            db.commit()
-            if cursor.rowcount == 0:  # Проверка, был ли удален хоть один элемент
-                raise HTTPException(status_code=404, detail="User with {nick} not found")
-    except sqlite3.Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    return {"message": "Expense deleted successfully"}
-
 
 app.include_router(router_auth)
 app.include_router(router_delete_user)
