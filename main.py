@@ -1,10 +1,7 @@
 import requests
 import time
-import logging
 import os
 import uvicorn
-import re
-import json
 import asyncio
 import jwt
 import sqlalchemy
@@ -27,7 +24,6 @@ from random import *
 from secrets import token_urlsafe
 from sqlalchemy import create_engine, text
 from sqlalchemy import MetaData, Table, String, Integer, Column, Text, DateTime, Boolean
-import pydantic_models
 from fastapi import Body, Header
 from fastapi import FastAPI, Body, HTTPException
 from fastapi.responses import RedirectResponse
@@ -37,16 +33,23 @@ from pydantic_models import User as model_user
 from pydantic_models import List as model_list
 from pydantic_models import Reg_User
 import json
+from uuid import uuid4
+import jwt
+
 app = FastAPI()
 
 @app.get("/")
-def get_lists():
+def get_lists(response: Response, cookie: str=Cookie(None)):
+    if cookie is None:
+        pass
     with sqlite3.connect("db/database.db") as db:
         cursor = db.cursor()
         cursor.execute("SELECT * FROM lists")
         rows = cursor.fetchall()
         respons = [row for row in rows]
-    return respons
+        session = uuid4()
+        cookie_value = str(f"{str(session)} , {str(int(time.time()))} , {str(int(time.time())+600)}").split(",")
+    return {"Тексты": respons, "Cookie": cookie_value}
 
 @app.post("/")
 def create_list(list: model_list):
@@ -92,11 +95,13 @@ def create_user(user: Reg_User):
     return {"message": "User created successfully"}
 
 @app.get("/user/login")
-def login_user(user: model_user):
+def login_user(user: model_user, response: Response):
     with sqlite3.connect("db/database.db") as db:
         cursor = db.cursor()
-        cursor.execute("""SELECT * FROM logins WHERE nick={user.nick}""")
+        cursor.execute("SELECT * FROM logins WHERE nick=?", (user.nick,))
         rows = cursor.fetchall()
-        if rows[1]==user.password:
-            return {"message": "You are loggin"}
-        return {"message": "You are no loggin"}
+        print(rows[0][1])
+        if rows and rows[0][1]==user.password:
+            token = jwt.encode({"sub": user.nick, "hash_password": user.password}, "your_secret_key", algorithm='HS256')
+            return {"message": "You are logged in", "token": token}
+        return {"message": "You are no logged"}
