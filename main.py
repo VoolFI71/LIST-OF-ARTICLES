@@ -38,7 +38,21 @@ import jwt
 from routers.auth import router_auth
 from routers.delete_user import router_delete_user
 from config import secret_key
+from fastapi import FastAPI, Depends
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from fastapi import Request
+from fastapi.staticfiles import StaticFiles
+
+
+
 app = FastAPI()
+
+templates = Jinja2Templates(directory="front/templates")
+app.mount("/static", StaticFiles(directory="front/static"), name="static")
+
+
+
 
 def check_auth(request: Request):
     token = request.cookies.get("jwt")
@@ -83,13 +97,13 @@ def page_of_create_list(list: model_list, request: Request):
         raise HTTPException(status_code=500, detail=f"Ошибка в базе данных: {str(e)}")
     return {"message": "List created successfully"}
 
-@app.get("/users", dependencies=[Depends(check_auth)])
-def get_users():
+@app.get("/users", response_class=HTMLResponse)
+def get_users(request: Request):
     with sqlite3.connect("db/database.db") as db:
         cursor = db.cursor()
         cursor.execute("SELECT * FROM logins")
         rows = cursor.fetchall()
-    return rows
+    return templates.TemplateResponse("index.html", {"request": request, "users": rows})
 
 @app.get("/admin/users")
 def get_users():
