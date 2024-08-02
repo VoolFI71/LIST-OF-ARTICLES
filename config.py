@@ -1,5 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+secret_key = "key"
+
 
 DATABASE="someDatabaseName"
 DB_HOST="localhost"

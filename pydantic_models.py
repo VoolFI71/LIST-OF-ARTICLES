@@ -7,6 +7,7 @@ class User(BaseModel):
 
 class Reg_User(User):
     password2: str
+    
 class List(BaseModel):
     title: str
     description: str
