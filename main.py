@@ -91,10 +91,8 @@ def page_of_create_list(list: model_list, request: Request):
 @app.get("/users", response_class=HTMLResponse)
 def get_users(request: Request):
     token = request.cookies.get("jwt")
-    if not token:
+    if not token or not(check_token(token)):
         return RedirectResponse(url="/user/login", status_code=302)
-    else:
-        check_token(token)
     try:
         payload = jwt.decode(token, secret_key, algorithms=['HS256'])
     except jwt.ExpiredSignatureError:
