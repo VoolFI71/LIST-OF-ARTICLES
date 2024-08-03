@@ -24,12 +24,11 @@
             });
             if (response.ok) {
                 const data = await response.json();
+                let token = data.token;
                 console.log(data.token);
+                document.cookie = "jwt=" + data.token + "; path=/";
                 window.location.href = "http://127.0.0.1:8000/users";
-                // Здесь можно добавить дополнительные действия после успешного входа
-                // Например, перенаправить пользователя или показать сообщение
             } else {
-                // Обработка ошибок
                 const errorData = await response.json();
                 console.error('Error:', errorData.detail);
             }
@@ -40,6 +39,5 @@
         <input type="password" id="password" placeholder="Password" required>
         <button type="submit">Login</button>
     </form>
-    <script src="{{ url_for('static', path='script.js') }}">fetchLoginPage()</script>
 </body>
 </html>

@@ -44,7 +44,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi import Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-
+from routers.auth import check_token
 
 app = FastAPI()
 app.add_middleware(
@@ -57,21 +57,6 @@ app.add_middleware(
 templates = Jinja2Templates(directory="front/templates")
 app.mount("/static", StaticFiles(directory="front/static"), name="static")
 
-
-
-
-def check_auth(request: Request):
-    token = request.cookies.get("jwt")
-    if not token :
-        raise HTTPException(status_code=403, detail="Аунтефикация не пройдена")  # Если токена нет, возвращаем 403
-    try:
-        # Попытка декодировать токен
-        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
-        return payload  # Если декодирование успешно, возвращаем полезную нагрузку (payload)
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=403, detail="JWT token has expired")  # Если токен просрочен
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=403, detail="Invalid JWT token")  # Если токен недействителен
 
 @app.get("/")
 def get_lists(response: Response, cookie: str=Cookie(None)):
@@ -105,6 +90,17 @@ def page_of_create_list(list: model_list, request: Request):
 
 @app.get("/users", response_class=HTMLResponse)
 def get_users(request: Request):
+    token = request.cookies.get("jwt")
+    if not token:
+        return RedirectResponse(url="/user/login", status_code=302)
+    else:
+        check_token(token)
+    try:
+        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=403, detail="JWT токен больше не работает, зайдите в аккаунт заново")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=403, detail="Invalid JWT token")
     with sqlite3.connect("db/database.db") as db:
         cursor = db.cursor()
         cursor.execute("SELECT * FROM logins")

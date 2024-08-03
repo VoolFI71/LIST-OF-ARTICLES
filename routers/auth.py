@@ -15,6 +15,15 @@ router_auth = APIRouter()
 
 templates = Jinja2Templates(directory="front/templates")
 
+def check_token(token):
+    with sqlite3.connect("db/database.db") as db:
+        cursor = db.cursor()
+        cursor.execute("SELECT * FROM logins WHERE token=?", (token,))
+        user = cursor.fetchone()
+        if user is None:
+            return False
+    return True
+
 def hash_password(password: str) -> str:
     sha256 = hashlib.sha256()
 
