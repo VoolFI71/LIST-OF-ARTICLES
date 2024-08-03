@@ -51,13 +51,10 @@ def login_user(response: Response, request: Request, nick: str = Form(...), pass
 
         if user[1] != hash_password(password):
             raise HTTPException(status_code=401, detail="Incorrect password")
-        print(11111111111111111111111111111)
         token = jwt.encode({"sub": nick, "exp": int(time.time()) + 100}, secret_key, algorithm='HS256')
         response.set_cookie(key="jwt", value=token, httponly=True, secure=False)
-        print(token)
         cursor.execute("UPDATE logins SET token=? WHERE nick=?", (token, nick))
         db.commit()
-
         return JSONResponse(content={"detail": "Login successful", "token": token})
 
 @router_auth.get("/user/login", response_class=HTMLResponse)

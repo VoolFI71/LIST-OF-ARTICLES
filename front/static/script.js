@@ -7,9 +7,12 @@ async function fetchLoginPage() {
 
         if (request.ok) {
             const cookies = document.cookie; // Получаем все cookie
-            console.log(cookies); // Выводим все cookie в консоль
+            if (cookies[0]+cookies[1]+cookies[2] != "jwt"){
+                const contentDiv = document.getElementById('content');
+                contentDiv.innerHTML = cookies;
+            }
         } else {
-            console.error('Ошибка при получении страницы:', request.status);
+            console.log(33)
         }
 
     } catch (error) {
@@ -18,4 +21,3 @@ async function fetchLoginPage() {
 }
 
 fetchLoginPage();
-console.log(5555)

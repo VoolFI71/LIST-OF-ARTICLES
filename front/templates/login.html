@@ -7,6 +7,34 @@
     <title>Пользователи</title>
 </head>
 <body>
+    <div id="content"></div>
+    <script>
+        async function loginUser() {
+            const nick = document.getElementById("nick").value;
+            const password = document.getElementById("password").value;
+
+            const response = await fetch('/user/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'nick': nick,
+                    'password': password
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log(data.detail);
+
+                // Здесь можно добавить дополнительные действия после успешного входа
+                // Например, перенаправить пользователя или показать сообщение
+            } else {                const errorData = await response.json();
+                console.error('Error:', errorData.detail);
+            }
+        }
+        </script>
     <form action="/user/login" method="post">
         <input type="text" name="nick" placeholder="Nickname" required>
         <input type="password" name="password" placeholder="Password" required>
