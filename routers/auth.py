@@ -40,7 +40,7 @@ def create_user(user: Reg_User):
 
 templates = Jinja2Templates(directory="front/templates")
 
-@router_auth.post("/user/login", response_class=HTMLResponse)
+@router_auth.post("/user/login")
 def login_user(response: Response, request: Request, nick: str = Form(...), password: str = Form(...)):
     with sqlite3.connect("db/database.db") as db:
         cursor = db.cursor()
@@ -58,8 +58,15 @@ def login_user(response: Response, request: Request, nick: str = Form(...), pass
         cursor.execute("UPDATE logins SET token=? WHERE nick=?", (token, nick))
         db.commit()
 
-        return JSONResponse(content={"detail": "Login successful"})
+        return JSONResponse(content={"detail": "Login successful", "token": token})
 
 @router_auth.get("/user/login", response_class=HTMLResponse)
 def page_login_user(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    token = request.cookies.get("jwt")
+    with sqlite3.connect("db/database.db") as db:
+        cursor = db.cursor()
+        cursor.execute("SELECT * FROM logins WHERE token=?", (token,))
+        user = cursor.fetchone()
+        if user is None:
+            return templates.TemplateResponse("login.html", {"request": request})
+        return templates.TemplateResponse("login.html", {"request": request})

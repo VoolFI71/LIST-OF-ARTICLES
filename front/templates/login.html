@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/styles.css">
-
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
     <title>Пользователи</title>
 </head>
 <body>
@@ -13,22 +12,6 @@
         <input type="password" name="password" placeholder="Password" required>
         <button type="submit">Login</button>
     </form>
-    <script>
-        function getJwtTokenFromCookie() {
-            const cookieName = "jwt";
-            const cookieValue = document.cookie.split('; ').find(row => row.startsWith(cookieName + '='));
-            if (cookieValue) {
-                return cookieValue.split('=')[1];
-            } else {
-                return null;
-            }
-        }
-        const jwtToken = getJwtTokenFromCookie();
-        if (!jwtToken) {
-            document.getElementById('login-form-container').style.display = 'block';
-        } else {
-            console.log("JWT Token:", jwtToken);
-        }
-    </script>
+    <script src="{{ url_for('static', path='script.js') }}">fetchLoginPage()</script>
 </body>
 </html>
