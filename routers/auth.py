@@ -68,7 +68,7 @@ def create_user(request: Request, response, Request, nick: str = Form(...), pass
 def page_login_user(request: Request, response: Response):
     token = request.cookies.get("jwt")
     if not token:
-        pass
+        return templates.TemplateResponse("login.html", {"request": request})
     try:
         payload = jwt.decode(token.encode(), secret_key, algorithms=['HS256'])
     except jwt.exceptions.ExpiredSignatureError:
