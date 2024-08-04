@@ -8,12 +8,42 @@
     <title>Пользователи</title>
 </head>
 <body>
-    <form action="/user/login" method="post">
-        <input type="text" name="nick" placeholder="Nickname" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <button type="submit">Login</button>
-    </form>
-    <script>    </script>
 
+    <script>
+        async function registerUser() {
+            const nick = document.getElementById("nick").value;
+            const password = document.getElementById("password").value;
+            const password2 = document.getElementById("password2").value;
+            const response = await fetch('/user/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'nick': nick,
+                    'password': password,
+                    'password2': password2
+                })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                let token = data.token;
+                console.log(data.token);
+                document.cookie = "jwt=" + data.token + "; path=/";
+                window.location.href = "http://127.0.0.1:8000/users";
+            } else {
+                const errorData = await response.json();
+                console.error('Error:', errorData.detail);
+            }
+        }
+        </script>
+
+    <form onsubmit="event.preventDefault(); registerUser();">
+        <input type="text" id="nick" placeholder="Nickname" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <input type="password" id="password2" placeholder="Password" required>
+
+        <button type="submit">Register</button>
+    </form>
 </body>
 </html>

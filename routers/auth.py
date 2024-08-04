@@ -33,21 +33,54 @@ def hash_password(password: str) -> str:
 
     return hashed_password
 
-@router_auth.post("/user/register")
-def create_user(user: Reg_User):
-    if user.password!=user.password2:
-        return {"message": "passwords are incorrect"}
-    try:
-        with sqlite3.connect("db/database.db") as db:
-            cursor = db.cursor()
-            password = hash_password(user.password)
-            cursor.execute("INSERT INTO logins (nick, password) VALUES (?, ?)", (user.nick, password))
-            db.commit()
-    except sqlite3.Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    return {"message": "User created successfully"}
+@router_auth.get("/user/register", response_class=HTMLResponse)
+def create_user(request: Request):
 
-templates = Jinja2Templates(directory="front/templates")
+    token = request.cookies.get("jwt")
+    if not token:
+        return templates.TemplateResponse("register.html", {"request": request})
+    try:
+        payload = jwt.decode(token.encode(), secret_key, algorithms=['HS256'])
+    except:
+        return templates.TemplateResponse("register.html", {"request": request})
+
+
+@router_auth.post("/user/register")
+def create_user(request: Request, response, Request, nick: str = Form(...), password: str = Form(...), password2: str = Form(...)):
+    with sqlite3.connect("db/database.db") as db:
+        cursor = db.cursor()
+        hash_password = hash_password(password)
+        cursor.execute("SELECT * FROM logins WHERE nick=?", (nick,))
+        user = cursor.fetchone()
+        if user is None:
+            if password == password2:
+                token = jwt.encode({"sub": nick, "exp": int(time.time()) + 10}, secret_key, algorithm='HS256')
+                cursor.execute("INSERT INTO logins (nick, password, token) VALUES (?, ?, ?)", (nick, hash_password, token))
+                db.commit()
+                response.set_cookie(key="jwt", value=token, httponly=True, secure=False)
+                return JSONResponse(content={"detail": "Register successful", "token": token})
+            else:
+                return JSONResponse(content={"detail": "Пароли не совпадают"}, status_code=400)
+        else:
+            return JSONResponse(content={"detail": "Пользователь с таким ником уже существует"}, status_code=400)
+
+@router_auth.get("/user/login", response_class=HTMLResponse)
+def page_login_user(request: Request, response: Response):
+    token = request.cookies.get("jwt")
+    if not token:
+        pass
+    try:
+        payload = jwt.decode(token.encode(), secret_key, algorithms=['HS256'])
+    except jwt.exceptions.ExpiredSignatureError:
+         return templates.TemplateResponse("login.html", {"request": request})
+    with sqlite3.connect("db/database.db") as db:
+        cursor = db.cursor()
+        cursor.execute("SELECT * FROM logins WHERE token=?", (token,))
+        user = cursor.fetchone()
+        if user is None:
+            return templates.TemplateResponse("login.html", {"request": request})
+        else:
+            return RedirectResponse(url="/users", status_code=302)
 
 @router_auth.post("/user/login")
 def login_user(response: Response, request: Request, nick: str = Form(...), password: str = Form(...)):
@@ -65,22 +98,3 @@ def login_user(response: Response, request: Request, nick: str = Form(...), pass
         cursor.execute("UPDATE logins SET token=? WHERE nick=?", (token, nick))
         db.commit()
         return JSONResponse(content={"detail": "Login successful", "token": token})
-
-@router_auth.get("/user/login", response_class=HTMLResponse)
-def page_login_user(request: Request, response: Response):
-
-    token = request.cookies.get("jwt")
-    if not token:
-        pass
-    try:
-        payload = jwt.decode(token.encode(), secret_key, algorithms=['HS256'])
-    except jwt.exceptions.ExpiredSignatureError:
-         return templates.TemplateResponse("login.html", {"request": request})
-    with sqlite3.connect("db/database.db") as db:
-        cursor = db.cursor()
-        cursor.execute("SELECT * FROM logins WHERE token=?", (token,))
-        user = cursor.fetchone()
-        if user is None:
-            return templates.TemplateResponse("login.html", {"request": request})
-        else:
-            return RedirectResponse(url="/users", status_code=302)
