@@ -66,7 +66,7 @@ def get_lists(response: Response, cookie: str=Cookie(None)):
         rows = cursor.fetchall()
         respons = [row for row in rows]
         session = uuid4()
-        cookie_value = str(f"{str(session)} , {str(int(time.time()))} , {str(int(time.time())+600)}").split(",")
+        cookie_value = str(f"{str(session)} , {str(int(time.time()))} , {str(int(time.time())+100)}").split(",")
     return {"Тексты": respons, "Cookie": cookie_value}
 
 @app.post("/create/list")
@@ -89,14 +89,14 @@ def page_of_create_list(list: model_list, request: Request):
     return {"message": "List created successfully"}
 
 @app.get("/users", response_class=HTMLResponse)
-def get_users(request: Request):
+def get_users(request: Request, response: Response):
     token = request.cookies.get("jwt")
-    if not token or not(check_token(token)):
+    if not token:
         return RedirectResponse(url="/user/login", status_code=302)
     try:
-        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
+        payload = jwt.decode(token.encode(), secret_key, algorithms=['HS256'])
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=403, detail="JWT токен больше не работает, зайдите в аккаунт заново")
+        return RedirectResponse(url="/user/login", status_code=302)
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=403, detail="Invalid JWT token")
     with sqlite3.connect("db/database.db") as db:

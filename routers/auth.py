@@ -5,11 +5,11 @@ import jwt
 import time
 from config import secret_key, salt
 import hashlib
-from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi import Request, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 router_auth = APIRouter()
 
 
@@ -60,19 +60,27 @@ def login_user(response: Response, request: Request, nick: str = Form(...), pass
 
         if user[1] != hash_password(password):
             raise HTTPException(status_code=401, detail="Incorrect password")
-        token = jwt.encode({"sub": nick, "exp": int(time.time()) + 100}, secret_key, algorithm='HS256')
+        token = jwt.encode({"sub": nick, "exp": int(time.time()) + 10}, secret_key, algorithm='HS256')
         response.set_cookie(key="jwt", value=token, httponly=True, secure=False)
         cursor.execute("UPDATE logins SET token=? WHERE nick=?", (token, nick))
         db.commit()
         return JSONResponse(content={"detail": "Login successful", "token": token})
 
 @router_auth.get("/user/login", response_class=HTMLResponse)
-def page_login_user(request: Request):
+def page_login_user(request: Request, response: Response):
+
     token = request.cookies.get("jwt")
+    if not token:
+        pass
+    try:
+        payload = jwt.decode(token.encode(), secret_key, algorithms=['HS256'])
+    except jwt.exceptions.ExpiredSignatureError:
+         return templates.TemplateResponse("login.html", {"request": request})
     with sqlite3.connect("db/database.db") as db:
         cursor = db.cursor()
         cursor.execute("SELECT * FROM logins WHERE token=?", (token,))
         user = cursor.fetchone()
         if user is None:
             return templates.TemplateResponse("login.html", {"request": request})
-        return templates.TemplateResponse("login.html", {"request": request})
+        else:
+            return RedirectResponse(url="/users", status_code=302)
