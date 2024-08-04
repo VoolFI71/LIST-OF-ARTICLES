@@ -11,7 +11,7 @@
     <h1>Список пользователей</h1>
     <ul id="user-list">
         {% for user in users %}
-            <li>{{ user[0] }} - {{ user[1] }}</li>
+            <li>{{ user[0] }} - {{ user[1] }} - {{ user[2] }}</li>
         {% endfor %}
     </ul>
     <a href="/user/login"> <button> Sign In </button> </a>

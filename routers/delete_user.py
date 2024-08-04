@@ -27,11 +27,11 @@ def delete_user(request: Request, nick: str = Form(...)):
         result = cursor.fetchone()
 
         if result is None or result[0] != "admin":
-            return JSONResponse(content={"detail": "У вас нет доступа"}, status_code=403)
+            return JSONResponse(content={"detail": "У вас нет доступа"})
 
         cursor.execute("DELETE FROM logins WHERE nick=?", (nick,))
         if cursor.rowcount == 0:
-            return JSONResponse(content={"detail": "Пользователь не найден"}, status_code=404)
+            return JSONResponse(content={"detail": "Пользователь не найден"})
         db.commit()
-        
+
         return JSONResponse(content={"detail": "Пользователь удален"})

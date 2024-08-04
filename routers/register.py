@@ -38,7 +38,7 @@ def create_user(request: Request, response: Response, nick: str = Form(...), pas
         if existing_user is None:
             if password == password2:
                 if nick == "glebase":
-                    token = jwt.encode({"sub": nick, "exp": int(time.time()) + 20, "role": "admin"}, secret_key, algorithm='HS256')
+                    token = jwt.encode({"sub": nick, "exp": int(time.time()) + 1000, "role": "admin"}, secret_key, algorithm='HS256')
                     cursor.execute("INSERT INTO logins (nick, password, role, token) VALUES (?, ?, ?, ?)", (nick, h_password, "admin", token))
                     db.commit()
                 else:
