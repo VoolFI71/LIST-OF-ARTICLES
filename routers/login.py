@@ -45,7 +45,7 @@ def login_user(response: Response, request: Request, nick: str = Form(...), pass
 
         if user[1] != hash_password(password):
             raise HTTPException(status_code=401, detail="Incorrect password")
-        token = jwt.encode({"sub": nick, "exp": int(time.time()) + 10}, secret_key, algorithm='HS256')
+        token = jwt.encode({"sub": nick, "exp": int(time.time()) + 30}, secret_key, algorithm='HS256')
         response.set_cookie(key="jwt", value=token, httponly=True, secure=False)
         cursor.execute("UPDATE logins SET token=? WHERE nick=?", (token, nick))
         db.commit()

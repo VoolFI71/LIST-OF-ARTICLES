@@ -3,3 +3,17 @@
     width: 300px;
     background-color: black;
 }
+
+.profile{
+    width: 100px;
+    height: 200px;
+    background-color: greenyellow;
+    color: green;
+}
+
+
+.name{
+    width: 100px;
+    height: 200px;
+    background-color: greenyellow;
+}

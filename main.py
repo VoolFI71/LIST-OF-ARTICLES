@@ -47,6 +47,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers.auth import check_token
 from routers.login import router_login
 from routers.register import router_reg
+from routers.profile import router_profile
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -104,7 +105,7 @@ def get_users(request: Request, response: Response):
         cursor = db.cursor()
         cursor.execute("SELECT * FROM logins")
         rows = cursor.fetchall()
-    return templates.TemplateResponse("users.html", {"request": request, "users": rows})
+    return templates.TemplateResponse("users.html", {"request": request, "users": rows, "name": payload["sub"]})
 
 @app.get("/admin/users")
 def get_users():
@@ -118,3 +119,4 @@ app.include_router(router_auth)
 app.include_router(router_delete_user)
 app.include_router(router_login)
 app.include_router(router_reg)
+app.include_router(router_profile)

@@ -11,5 +11,14 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from fastapi.responses import HTMLResponse, RedirectResponse
 from routers.auth import hash_password
-router_reg= APIRouter()
+
+router_profile= APIRouter()
 templates = Jinja2Templates(directory="front/templates")
+
+@router_profile.get("/user/{nick}")
+def get_profile(nick: str, request: Request):
+    with sqlite3.connect("db/database.db") as db:
+        cursor = db.cursor()
+        cursor.execute("SELECT * FROM logins WHERE nick=?", (nick,))
+        res = cursor.fetchone()
+    return templates.TemplateResponse("profile.html", {"request": request, "response": res})
