@@ -6,9 +6,36 @@
     <title>Document</title>
 </head>
 <body>
-    <form >
+    <form id="deleteUserForm">
         <input type="text" id="nick" placeholder="Nickname" required>
         <button type="submit">Удалить</button>
     </form>
+
+    <script>
+        document.getElementById('deleteUserForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const nick = document.getElementById('nick').value;
+
+            fetch('/user/delete/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({ nick: nick })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('User not found');
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert(data.detail);
+            })
+            .catch(error => {
+                alert(error.message);
+            });
+        });
+    </script>
 </body>
 </html>

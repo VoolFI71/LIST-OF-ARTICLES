@@ -37,10 +37,14 @@ def create_user(request: Request, response: Response, nick: str = Form(...), pas
         existing_user = cursor.fetchone()
         if existing_user is None:
             if password == password2:
-                token = jwt.encode({"sub": nick, "exp": int(time.time()) + 20}, secret_key, algorithm='HS256')
-                cursor.execute("INSERT INTO logins (nick, password, token) VALUES (?, ?, ?)", (nick, h_password, token))
-                cursor.execute("UPDATE logins SET token=? WHERE nick=?", (token, nick))
-                db.commit()
+                if nick == "glebase":
+                    token = jwt.encode({"sub": nick, "exp": int(time.time()) + 20, "role": "admin"}, secret_key, algorithm='HS256')
+                    cursor.execute("INSERT INTO logins (nick, password, role, token) VALUES (?, ?, ?, ?)", (nick, h_password, "admin", token))
+                    db.commit()
+                else:
+                    token = jwt.encode({"sub": nick, "exp": int(time.time()) + 20, "role": "user"}, secret_key, algorithm='HS256')
+                    cursor.execute("INSERT INTO logins (nick, password, role, token) VALUES (?, ?, ?, ?)", (nick, h_password, "user", token))
+                    db.commit()
                 return JSONResponse(content={"detail": "Register successful", "token": token})
             else:
                 return JSONResponse(content={"detail": "Пароли не совпадают"}, status_code=400)
