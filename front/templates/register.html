@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/styles.css">
-
     <title>Пользователи</title>
 </head>
 <body>
@@ -32,11 +31,12 @@
                 document.cookie = "jwt=" + data.token + "; path=/";
                 window.location.href = "http://127.0.0.1:8000/users";
             } else {
-                const errorData = await response.json();
-                console.error('Error:', errorData.detail);
+                console.error('Error:', response.status);
             }
+
         }
         </script>
+
 
     <form onsubmit="event.preventDefault(); registerUser();">
         <input type="text" id="nick" placeholder="Nickname" required>

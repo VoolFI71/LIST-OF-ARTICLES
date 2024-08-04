@@ -41,28 +41,29 @@ def create_user(request: Request):
         return templates.TemplateResponse("register.html", {"request": request})
     try:
         payload = jwt.decode(token.encode(), secret_key, algorithms=['HS256'])
+        return RedirectResponse(url="/users", status_code=302)
     except:
         return templates.TemplateResponse("register.html", {"request": request})
 
 
 @router_auth.post("/user/register")
-def create_user(request: Request, response, Request, nick: str = Form(...), password: str = Form(...), password2: str = Form(...)):
+def create_user(request: Request, response: Response, nick: str = Form(...), password: str = Form(...), password2: str = Form(...)):
     with sqlite3.connect("db/database.db") as db:
         cursor = db.cursor()
-        hash_password = hash_password(password)
+        h_password = hash_password(password)
         cursor.execute("SELECT * FROM logins WHERE nick=?", (nick,))
-        user = cursor.fetchone()
-        if user is None:
+        existing_user = cursor.fetchone()
+        if existing_user is None:
             if password == password2:
-                token = jwt.encode({"sub": nick, "exp": int(time.time()) + 10}, secret_key, algorithm='HS256')
-                cursor.execute("INSERT INTO logins (nick, password, token) VALUES (?, ?, ?)", (nick, hash_password, token))
+                token = jwt.encode({"sub": nick, "exp": int(time.time()) + 20}, secret_key, algorithm='HS256')
+                cursor.execute("INSERT INTO logins (nick, password, token) VALUES (?, ?, ?)", (nick, h_password, token))
+                cursor.execute("UPDATE logins SET token=? WHERE nick=?", (token, nick))
                 db.commit()
-                response.set_cookie(key="jwt", value=token, httponly=True, secure=False)
                 return JSONResponse(content={"detail": "Register successful", "token": token})
             else:
                 return JSONResponse(content={"detail": "Пароли не совпадают"}, status_code=400)
         else:
-            return JSONResponse(content={"detail": "Пользователь с таким ником уже существует"}, status_code=400)
+            return JSONResponse(content={"detail": "Пользователь с таким ником уже существует"}, status_code=401)
 
 @router_auth.get("/user/login", response_class=HTMLResponse)
 def page_login_user(request: Request, response: Response):

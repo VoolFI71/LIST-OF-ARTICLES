@@ -4,7 +4,7 @@ import sqlite3
 import jwt
 router_delete_user = APIRouter()
 
-@router_delete_user.delete("/user/delete/{nick}")
+@router_delete_user.get("/user/delete/{nick}")
 def delete_user(nick: str):
     try:
         with sqlite3.connect("db/database.db") as db:
