@@ -48,10 +48,11 @@ from routers.auth import check_token
 from routers.login import router_login
 from routers.register import router_reg
 from routers.profile import router_profile
+from routers.users import router_users
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Замените на ваши домены
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -90,33 +91,9 @@ def page_of_create_list(list: model_list, request: Request):
         raise HTTPException(status_code=500, detail=f"Ошибка в базе данных: {str(e)}")
     return {"message": "List created successfully"}
 
-@app.get("/users", response_class=HTMLResponse)
-def get_users(request: Request, response: Response):
-    token = request.cookies.get("jwt")
-    if not token:
-        return RedirectResponse(url="/user/login", status_code=302)
-    try:
-        payload = jwt.decode(token.encode(), secret_key, algorithms=['HS256'])
-    except jwt.ExpiredSignatureError:
-        return RedirectResponse(url="/user/login", status_code=302)
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=403, detail="Invalid JWT token")
-    with sqlite3.connect("db/database.db") as db:
-        cursor = db.cursor()
-        cursor.execute("SELECT * FROM logins")
-        rows = cursor.fetchall()
-    return templates.TemplateResponse("users.html", {"request": request, "users": rows, "name": payload["sub"]})
-
-@app.get("/admin/users")
-def get_users():
-    with sqlite3.connect("db/database.db") as db:
-        cursor = db.cursor()
-        cursor.execute("SELECT * FROM logins")
-        rows = cursor.fetchall()
-    return rows
-
 app.include_router(router_auth)
 app.include_router(router_delete_user)
 app.include_router(router_login)
 app.include_router(router_reg)
 app.include_router(router_profile)
+app.include_router(router_users)
