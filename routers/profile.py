@@ -15,7 +15,7 @@ from routers.auth import hash_password
 router_profile= APIRouter()
 templates = Jinja2Templates(directory="front/templates")
 
-@router_profile.get("/user/{nick}")
+@router_profile.get("/profile/{nick}")
 def get_profile(nick: str, request: Request):
     with sqlite3.connect("db/database.db") as db:
         cursor = db.cursor()

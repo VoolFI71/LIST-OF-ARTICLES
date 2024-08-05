@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Form, HTTPException, Request, Response
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from pydantic_models import Reg_User, User as model_user
 import sqlite3
 import jwt
 router_delete_user = APIRouter()

@@ -1,19 +1,11 @@
-.main{
-    height: 300px;
-    width: 300px;
-    background-color: black;
+*{
+    padding: 0;
+    margin: 0;
 }
 
 .profile{
-    width: 100px;
-    height: 200px;
+    width: 1002px;
+    height: 2002px;
     background-color: greenyellow;
     color: green;
-}
-
-
-.name{
-    width: 100px;
-    height: 200px;
-    background-color: greenyellow;
 }

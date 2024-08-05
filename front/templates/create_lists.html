@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+
+    <script>
+        async function createList() {
+            const title = document.getElementById("title").value;
+            const description = document.getElementById("description").value;
+
+            const listData = {
+                title: title,
+                description: description
+            };
+            try{
+                const response = await fetch("/create/list", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(listData),
+                });
+                if (!response.ok){
+                    throw new Error("response was not ok")
+                }
+                
+                const result = await response.json();
+                console.log("Success:", result);
+            } catch (error){
+                console.error("Error:", error);
+            }
+        }
+    </script>
+    <form onsubmit="event.preventDefault(); createList();">
+        <input type="text" id="title" placeholder="Название" required>
+        <input type="password" id="description" placeholder="Описание" required>
+        <button type="submit">Создать</button>
+    </form>
+</body>
+</html>
