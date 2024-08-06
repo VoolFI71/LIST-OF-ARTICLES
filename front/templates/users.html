@@ -42,9 +42,27 @@
     {% endif %}
 
 
-    <h1>Active Users</h1>
-    <ul id="user-list"></ul>
+    <h1>Количество подключенных пользователей: <span id="user-count">0</span></h1>
 
+    <script>
+        var ws = new WebSocket("ws://localhost:8000/ws");
+        ws.onopen = function(e) {
+            ws.send(document.cookie);
+        }
+        
+        ws.onmessage = function(event) {
+            var message = JSON.parse(event.data);
+            if (message.user_count !== undefined) {
+                document.getElementById("user-count").innerText = message.user_count;
+            } else {
+                console.log("Received message:", message);
+            }
+        };
+
+        ws.onclose = function(e) {
+            console.log("Connection closed:", e);
+        };
+    </script>
 
 </body>
 </html>

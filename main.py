@@ -1,6 +1,8 @@
+import json
+from typing import List
 from fastapi.templating import Jinja2Templates
 import uvicorn
-from fastapi import FastAPI, Cookie, Request, Response, Depends
+from fastapi import FastAPI, Cookie, Request, Response, Depends, WebSocketDisconnect
 from aiogram import *
 from aiogram.types import *
 from random import *
@@ -20,6 +22,8 @@ from routers.profile import router_profile
 from routers.users import router_users
 from routers.lists import router_lists
 from config import secret_key
+from routers.main_page import main_page_router as router_main_page
+from config import ConnectionManager
 
 app = FastAPI()
 templates = Jinja2Templates(directory="front/templates")
@@ -33,18 +37,6 @@ app.add_middleware(
 )
 
 app.mount("/static", StaticFiles(directory="front/static"), name="static")
-@app.get("/")
-def main(request: Request):
-    token = request.cookies.get("jwt")
-    if not token:
-        return templates.TemplateResponse("main.html", {"request": request})
-    try:
-        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
-    except:
-        return templates.TemplateResponse("main.html", {"request": request})
-
-    return templates.TemplateResponse("main.html", {"request": request, "nick": payload["sub"]})
-
 
 app.include_router(router_auth)
 app.include_router(router_delete_user)
@@ -53,3 +45,66 @@ app.include_router(router_reg)
 app.include_router(router_profile)
 app.include_router(router_users)
 app.include_router(router_lists)
+app.include_router(router_main_page)
+
+
+manager = ConnectionManager()
+
+def get_token_from_cookie(cookie_string: str):
+    cookies = cookie_string.split('; ')
+    for cookie in cookies:
+        name, value = cookie.split('=')
+        if name == 'jwt':
+            return value
+    return None
+
+class ConnectionManager:
+    def __init__(self) -> None:
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        self.active_connections.append(websocket)
+        await websocket.accept()
+        await self.broadcast_user_count()
+
+    async def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+        await websocket.close()
+        await self.broadcast_user_count()
+
+    async def send_personal_message(self, message: str, websocket: WebSocket):
+        await websocket.send_text(message)
+
+    async def broadcast(self, data: str):
+        for connection in self.active_connections:
+            await connection.send_text(data)
+
+    async def broadcast_user_count(self):
+        count = len(self.active_connections)
+        message = json.dumps({"user_count": count})
+        await self.broadcast(message)
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    cookie_string = await websocket.receive_text()
+    token = get_token_from_cookie(cookie_string)
+    if token:
+        try:
+            payload = jwt.decode(token, secret_key, algorithms=['HS256'])
+            await manager.connect(websocket)
+            try:
+                while True:
+                    data = await websocket.receive_text()
+                    await manager.broadcast(data)
+            except WebSocketDisconnect:
+                await manager.disconnect(websocket)
+            except Exception as e:
+                print(f"Error while receiving message: {e}")
+                await manager.disconnect(websocket)
+        except jwt.PyJWTError as e:
+            print(f"JWT error: {e}")
+            await websocket.close()
+    else:
+        print("No token provided, closing connection.")
+        await websocket.close() 
