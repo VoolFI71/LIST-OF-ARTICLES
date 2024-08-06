@@ -12,13 +12,11 @@
         <div class="name">
             {{ nick }}
         </div>
+
         <script>
             async function deleteToken() {
-                const cookieName = 'jwt'; // Замените на имя вашего куки
-
+                const cookieName = 'jwt';
                 document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;';
-
-                // Дополнительно можно перенаправить пользователя или выполнить другие действия
                 window.location.href = "http://127.0.0.1:8000/";
             }
         </script>

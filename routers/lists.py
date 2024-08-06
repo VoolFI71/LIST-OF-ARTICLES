@@ -34,7 +34,15 @@ def get_lists(response: Response, request: Request):
         cursor.execute("SELECT * FROM lists")
         rows = cursor.fetchall()
         respons = [row for row in rows]
-    return templates.TemplateResponse("lists.html", {"request": request, "response": respons})
+    token = request.cookies.get("jwt")
+    if token:
+        try:
+            payload = jwt.decode(token.encode(), secret_key, algorithms=['HS256'])
+            return templates.TemplateResponse("lists.html", {"request": request, "response": respons, "nick": payload["sub"]})
+        except:
+            return templates.TemplateResponse("lists.html", {"request": request, "response": respons})
+    else:
+        return templates.TemplateResponse("lists.html", {"request": request, "response": respons})
 
 @router_lists.get("/lists/{nick}")
 def get_lists(nick: str, response: Response, request: Request):
@@ -43,7 +51,15 @@ def get_lists(nick: str, response: Response, request: Request):
         cursor.execute("SELECT * FROM lists WHERE nick=?", (nick,))
         rows = cursor.fetchall()
         respons = [row for row in rows]
-    return templates.TemplateResponse("user_lists.html", {"request": request, "response": respons})
+    token = request.cookies.get("jwt")
+    if token:
+        try:
+            payload = jwt.decode(token.encode(), secret_key, algorithms=['HS256'])
+            return templates.TemplateResponse("user_lists.html", {"request": request, "response": respons, "nick": payload["sub"]})
+        except:
+            return templates.TemplateResponse("user_lists.html", {"request": request, "response": respons})
+    else:
+        return templates.TemplateResponse("user_lists.html", {"request": request, "response": respons})
 
 
 @router_lists.get("/create/list")

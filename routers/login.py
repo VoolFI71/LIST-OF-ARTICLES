@@ -29,7 +29,7 @@ def page_login_user(request: Request, response: Response):
         if user is None:
             return templates.TemplateResponse("login.html", {"request": request})
         else:
-            return RedirectResponse(url="/users", status_code=302)
+            return RedirectResponse(url="/", status_code=302)
 
 @router_login.post("/user/login")
 def login_user(response: Response, request: Request, nick: str = Form(...), password: str = Form(...)):

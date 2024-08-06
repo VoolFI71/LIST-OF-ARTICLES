@@ -12,7 +12,17 @@
         <div class="name">
             {{ nick }}
         </div>
-        <button>Logout</button>
+        <script>
+            async function deleteToken() {
+                const cookieName = 'jwt';
+
+                document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;';
+
+                window.location.href = "http://127.0.0.1:8000/";
+            }
+        </script>
+
+        <button onclick="deleteToken()">Logout</button>
     </header>
 
     {% else %}
