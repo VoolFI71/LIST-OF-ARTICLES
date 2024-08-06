@@ -30,10 +30,18 @@
     <a href="/user/register"> <button> Sign Up </button> </a>
     {% endif %}
 
-    <div class="profile">
-        <p>Никнейм - {{response[0]}} </p>
-        <p>Роль - {{response[2]}} </p>
+    <div class="container">
+        <div class="user-profile">
+            <img src="avatar.jpg" alt="Аватар пользователя" class="avatar">
+            <h1 class="username">Никнейм - {{response[0]}}</h1>
+            <h1 class="username">Роль - {{response[2]}} </h1>
+            <p class="bio">Краткая информация о пользователе. Здесь можно написать о своих интересах, хобби и т.д.</p>
+            <div class="user-details">
+                <p><strong>Email:</strong> user@example.com</p>
+                <p><strong>Возраст:</strong> 25 лет</p>
+                <p><strong>Город:</strong> Москва</p>
+            </div>
+        </div>
     </div>
-
 </body>
 </html>

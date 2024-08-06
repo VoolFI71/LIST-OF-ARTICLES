@@ -21,7 +21,10 @@ def get_profile(nick: str, request: Request):
         cursor = db.cursor()
         cursor.execute("SELECT * FROM logins WHERE nick=?", (nick,))
         res = cursor.fetchone()
+    if res is None:
+        raise HTTPException(status_code=404, detail="User not found")
     token = request.cookies.get("jwt")
+
     if not token:
         return templates.TemplateResponse("profile.html", {"request": request, "response": res})
     try:
