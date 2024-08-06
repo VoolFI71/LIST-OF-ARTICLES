@@ -49,7 +49,7 @@
         ws.onopen = function(e) {
             ws.send(document.cookie);
         }
-        
+
         ws.onmessage = function(event) {
             var message = JSON.parse(event.data);
             if (message.user_count !== undefined) {
@@ -57,10 +57,6 @@
             } else {
                 console.log("Received message:", message);
             }
-        };
-
-        ws.onclose = function(e) {
-            console.log("Connection closed:", e);
         };
     </script>
 

@@ -7,6 +7,13 @@
 </head>
 <body>
 
+    <script>
+        var ws = new WebSocket("ws://localhost:8000/ws");
+        ws.onopen = function(e) {
+            ws.send(document.cookie);
+        }
+    </script>
+
     {% if name %}
     <header class="header">
         <div class="name">
@@ -19,7 +26,7 @@
     <a href="/user/login"> <button> Sign In </button> </a>
     <a href="/user/register"> <button> Sign Up </button> </a>
     {% endif %}
-    
+
     <script>
         async function createList() {
             const title = document.getElementById("title").value;
