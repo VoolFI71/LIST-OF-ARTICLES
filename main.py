@@ -4,10 +4,9 @@ from fastapi import FastAPI, Cookie, Request, Response, Depends
 from aiogram import *
 from aiogram.types import *
 from random import *
-from fastapi import Body, Header
+from fastapi import Body, Header, WebSocket
 from fastapi import FastAPI, Body, HTTPException
 from random import *
-from pydantic_models import List as model_list
 from uuid import uuid4
 import jwt
 from routers.auth import router_auth
@@ -20,6 +19,8 @@ from routers.register import router_reg
 from routers.profile import router_profile
 from routers.users import router_users
 from routers.lists import router_lists
+from config import secret_key
+
 app = FastAPI()
 templates = Jinja2Templates(directory="front/templates")
 
@@ -34,7 +35,15 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="front/static"), name="static")
 @app.get("/")
 def main(request: Request):
-    return templates.TemplateResponse("main.html", {"request": request})
+    token = request.cookies.get("jwt")
+    if not token:
+        return templates.TemplateResponse("main.html", {"request": request})
+    try:
+        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
+    except:
+        return templates.TemplateResponse("main.html", {"request": request})
+
+    return templates.TemplateResponse("main.html", {"request": request, "nick": payload["sub"]})
 
 
 app.include_router(router_auth)

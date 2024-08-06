@@ -6,25 +6,68 @@
 </head>
 <body>
 
-    {% if name %}
+    {% if nick%}
     <header class="header">
         <div class="name">
-            {{ name }}
+            {{ nick }}
+        </div>
+
+        <script>
+            async function deleteToken() {
+                const cookieName = 'jwt'; // Замените на имя вашего куки
+
+                document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;';
+
+                // Дополнительно можно перенаправить пользователя или выполнить другие действия
+                window.location.href = "http://127.0.0.1:8000/";
+            }
+        </script>
+
+        <button onclick="deleteToken()">Logout</button>
+
+        <div>
+            <h1>Список пользователей</h1>
+            <ul id="user-list">
+                {% for user in users %}
+                    <li>{{ user[0] }} - {{ user[1] }} - {{ user[2] }}</li>
+                {% endfor %}
+            </ul>
         </div>
     </header>
+
     {% else %}
+    <div>
+        <h1>Чтобы посмотреть пользователей необходимо войти в аккаунт</h1>
+    </div>
     <a href="/user/login"> <button> Sign In </button> </a>
     <a href="/user/register"> <button> Sign Up </button> </a>
     {% endif %}
 
 
-    <h1>Список пользователей</h1>
-    <ul id="user-list">
-        {% for user in users %}
-            <li>{{ user[0] }} - {{ user[1] }} - {{ user[2] }}</li>
-        {% endfor %}
-    </ul>
+    <h1>Active Users</h1>
+    <ul id="user-list"></ul>
 
+    <script>
+        const userListElement = document.getElementById("user-list");
+        const ws = new WebSocket("ws://localhost:8000/ws/users");
+
+        ws.onmessage = function(event) {
+            const message = event.data;
+            // Очищаем список перед добавлением новых пользователей
+            userListElement.innerHTML = '';
+            // Разделяем сообщение на пользователей и добавляем их в список
+            const users = message.replace("Active users: ", "").split(", ");
+            users.forEach(user => {
+                const li = document.createElement("li");
+                li.textContent = user;
+                userListElement.appendChild(li);
+            });
+        };
+
+        ws.onclose = function() {
+            console.log("WebSocket closed");
+        };
+    </script>
 
 </body>
 </html>

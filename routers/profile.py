@@ -21,4 +21,11 @@ def get_profile(nick: str, request: Request):
         cursor = db.cursor()
         cursor.execute("SELECT * FROM logins WHERE nick=?", (nick,))
         res = cursor.fetchone()
-    return templates.TemplateResponse("profile.html", {"request": request, "response": res})
+    token = request.cookies.get("jwt")
+    if not token:
+        return templates.TemplateResponse("profile.html", {"request": request, "response": res})
+    try:
+        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
+    except jwt.exceptions.ExpiredSignatureError:
+        return templates.TemplateResponse("profile.html", {"request": request, "response": res})
+    return templates.TemplateResponse("profile.html", {"request": request, "nick": payload["sub"], "response": res})
