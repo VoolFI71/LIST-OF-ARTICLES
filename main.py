@@ -24,8 +24,10 @@ from routers.lists import router_lists
 from config import secret_key
 from routers.main_page import main_page_router as router_main_page
 from config import ConnectionManager
+from routers.setting_profile import setting_profile_router
 
 app = FastAPI()
+
 templates = Jinja2Templates(directory="front/templates")
 
 app.add_middleware(
@@ -37,7 +39,6 @@ app.add_middleware(
 )
 
 app.mount("/static", StaticFiles(directory="front/static"), name="static")
-
 app.include_router(router_auth)
 app.include_router(router_delete_user)
 app.include_router(router_login)
@@ -46,8 +47,7 @@ app.include_router(router_profile)
 app.include_router(router_users)
 app.include_router(router_lists)
 app.include_router(router_main_page)
-
-
+app.include_router(setting_profile_router)
 manager = ConnectionManager()
 
 def get_token_from_cookie(cookie_string: str):
@@ -57,32 +57,6 @@ def get_token_from_cookie(cookie_string: str):
         if name == 'jwt':
             return value
     return None
-
-class ConnectionManager:
-    def __init__(self) -> None:
-        self.active_connections: List[WebSocket] = []
-
-    async def connect(self, websocket: WebSocket):
-        self.active_connections.append(websocket)
-        await websocket.accept()
-        await self.broadcast_user_count()
-
-    async def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
-        await websocket.close()
-        await self.broadcast_user_count()
-
-    async def send_personal_message(self, message: str, websocket: WebSocket):
-        await websocket.send_text(message)
-
-    async def broadcast(self, data: str):
-        for connection in self.active_connections:
-            await connection.send_text(data)
-
-    async def broadcast_user_count(self):
-        count = len(self.active_connections)
-        message = json.dumps({"user_count": count})
-        await self.broadcast(message)
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):

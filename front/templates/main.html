@@ -16,6 +16,7 @@
 
     {% if nick %}
     <header class="header">
+        
         <div class="name">
             {{ nick }}
         </div>
@@ -35,7 +36,7 @@
     <a href="/user/register"> <button> Sign Up </button> </a>
     {% endif %}
 
-    <a href="/users"><p>/users - Посмотреть юзеров</p></a>
+    <a href="/users"><p>/users - Посмотреть количество авторизованных пользователей на сайте</p></a>
     <a href="/profile/user"><p>/profile/{user} - Профиль юзера</p></a>
     <a href="/user/login"><p>/user/login - Войти в аккаунт</p></a>
     <a href="/user/register"><p>/user/register - Создать аккаунт</p></a>
@@ -43,6 +44,6 @@
     <a href="/lists"><p>/lists- Все посты</p></a>
     <a href="/lists/user"><p>/lists/{user}- Все посты юзера</p></a>
     <a href="/create/list"><p>/create/list- Создать пост для авторизованных</p></a>
-
 </body>
+
 </html>

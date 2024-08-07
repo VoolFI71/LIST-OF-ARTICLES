@@ -16,6 +16,8 @@
         }
     </script>
 
+
+
     {% if nick %}
     <header class="header">
         <div class="name">
@@ -34,8 +36,14 @@
     </header>
 
     {% else %}
-    <a href="/user/login"> <button> Sign In </button> </a>
-    <a href="/user/register"> <button> Sign Up </button> </a>
+
+    <header>
+        <nav>
+            <a href="/user/login"> <button> Sign In </button> </a>
+            <a href="/user/register"> <button> Sign Up </button> </a>
+        </nav>
+    </header>
+    
     {% endif %}
 
     <div class="container">
