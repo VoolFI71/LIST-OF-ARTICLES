@@ -25,7 +25,6 @@ from config import secret_key
 from routers.main_page import main_page_router as router_main_page
 from config import ConnectionManager
 from routers.setting_profile import setting_profile_router
-
 app = FastAPI()
 
 templates = Jinja2Templates(directory="front/templates")

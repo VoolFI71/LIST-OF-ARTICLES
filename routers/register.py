@@ -13,6 +13,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from routers.auth import hash_password
 router_reg= APIRouter()
 templates = Jinja2Templates(directory="front/templates")
+import aiosqlite
 
 
 @router_reg.get("/user/register", response_class=HTMLResponse)
@@ -29,22 +30,17 @@ def create_user(request: Request):
 
 
 @router_reg.post("/user/register")
-def create_user(request: Request, response: Response, nick: str = Form(...), password: str = Form(...), password2: str = Form(...)):
-    with sqlite3.connect("db/database.db") as db:
-        cursor = db.cursor()
+async def create_user(request: Request, response: Response, nick: str = Form(...), password: str = Form(...), password2: str = Form(...)):
+    async with aiosqlite.connect("db/database.db") as db:
         h_password = hash_password(password)
-        cursor.execute("SELECT * FROM logins WHERE nick=?", (nick,))
-        existing_user = cursor.fetchone()
+        existing_user = await db.execute("SELECT * FROM logins WHERE nick=?", (nick,))
+        existing_user = await existing_user.fetchone()
         if existing_user is None:
             if password == password2:
-                if nick == "glebase":
-                    token = jwt.encode({"sub": nick, "exp": int(time.time()) + 240, "role": "admin"}, secret_key, algorithm='HS256')
-                    cursor.execute("INSERT INTO logins (nick, password, role, token) VALUES (?, ?, ?, ?)", (nick, h_password, "admin", token))
-                    db.commit()
-                else:
-                    token = jwt.encode({"sub": nick, "exp": int(time.time()) + 240, "role": "user"}, secret_key, algorithm='HS256')
-                    cursor.execute("INSERT INTO logins (nick, password, role, token) VALUES (?, ?, ?, ?)", (nick, h_password, "user", token))
-                    db.commit()
+                role = "admin" if nick == "glebase" else "user"
+                token = jwt.encode({"sub": nick, "exp": int(time.time()) + 240, "role": role}, secret_key, algorithm='HS256')
+                await db.execute("INSERT INTO logins (nick, password, role, token) VALUES (?, ?, ?, ?)", (nick, h_password, role, token))
+                await db.commit()
                 return JSONResponse(content={"detail": "Register successful", "token": token})
             else:
                 return JSONResponse(content={"detail": "Пароли не совпадают"}, status_code=400)
