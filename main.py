@@ -61,22 +61,32 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     cookie_string = await websocket.receive_text()
     token = get_token_from_cookie(cookie_string)
+    connection_closed = False
     if token:
         try:
             payload = jwt.decode(token, secret_key, algorithms=['HS256'])
             await manager.connect(token, websocket)
-            try:
-                while True:
-                    data = await websocket.receive_text()
-                    await manager.broadcast(data)
-            except WebSocketDisconnect:
-                await manager.disconnect(token, websocket)
-            except Exception as e:
-                print(f"Error while receiving message: {e}")
-                await manager.disconnect(token, websocket)
-        except jwt.PyJWTError as e:
-            print(f"JWT error: {e}")
+            while True:
+                data = await websocket.receive_text()
+                await manager.broadcast(data)
+        except jwt.ExpiredSignatureError:
+            print("Токен истек, закрываю соединение.")
             await websocket.close()
+            connection_closed = True
+        except jwt.PyJWTError as e:
+            print(f"Ошибка JWT: {e}")
+            if not connection_closed:
+                await websocket.close()
+                connection_closed = True
+        except WebSocketDisconnect:
+            if not connection_closed:
+                await manager.disconnect(token, websocket)
+                connection_closed = True
+        except Exception as e:
+            print(f"Ошибка при получении сообщения: {e}")
+            if not connection_closed:
+                await manager.disconnect(token, websocket)
+                connection_closed = True
     else:
         print("No token provided, closing connection.")
         await websocket.close()
