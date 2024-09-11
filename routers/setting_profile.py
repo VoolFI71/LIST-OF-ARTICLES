@@ -17,7 +17,14 @@ templates = Jinja2Templates(directory="front/templates")
 
 @setting_profile_router.get("/settings")
 def setting_profile(request: Request):
-    return templates.TemplateResponse("settings_profile.html", {"request": request})
+    token = request.cookies.get("jwt")
+    if not token:
+        return templates.TemplateResponse("settings_profile.html", {"request": request})
+    try:
+        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
+    except:
+        return templates.TemplateResponse("settings_profile.html", {"request": request})
+    return templates.TemplateResponse("settings_profile.html", {"request": request, "nick": payload["sub"]})
 
 @setting_profile_router.post("/settings")
 def setting_profile(request: Request):

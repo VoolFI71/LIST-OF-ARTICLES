@@ -7,6 +7,7 @@
 </head>
 <body>
     <a href="http://127.0.0.1:8000/"><button>To main</button></a>
+    <p></p>
 
     <script>
         var ws = new WebSocket("ws://localhost:8000/ws");
@@ -34,6 +35,7 @@
 
     {% else %}
     <a href="/user/login"> <button> Sign In </button> </a>
+    <p></p>
     <a href="/user/register"> <button> Sign Up </button> </a>
     {% endif %}
 

@@ -5,10 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>Пользователи</title>
 </head>
 <body>
-    <h1>kekekk</h1>
     <a href="http://127.0.0.1:8000/"><button>To main</button></a>
 
-    {% if nick%}
+    {% if nick %}
     <header class="header">
         <div class="name">
             {{ nick }}
@@ -39,8 +38,9 @@
         <h1>Чтобы посмотреть пользователей необходимо войти в аккаунт</h1>
     </div>
     <a href="/user/login"> <button> Sign In </button> </a>
+    <p></p>
     <a href="/user/register"> <button> Sign Up </button> </a>
-    {% endif %}
+    {% endif %} 
 
 
     <h1>Количество подключенных пользователей: <span id="user-count">0</span></h1>
