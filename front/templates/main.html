@@ -6,6 +6,7 @@
     <title>Document</title>
 </head>
 <body>
+    <a href="http://127.0.0.1:8000/"><button>To main</button></a>
 
     <script>
         var ws = new WebSocket("ws://localhost:8000/ws");
@@ -25,7 +26,7 @@
             async function deleteToken() {
                 const cookieName = 'jwt';
                 document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;';
-                window.location.href = "http://127.0.0.1:8000/user/login";
+                window.location.href = "http://127.0.0.1:8000/user/{nick}";
             }
         </script>
         <button onclick="deleteToken()">Logout</button>

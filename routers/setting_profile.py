@@ -22,3 +22,4 @@ def setting_profile(request: Request):
 @setting_profile_router.post("/settings")
 def setting_profile(request: Request):
     return templates.TemplateResponse("settings_profile.html", {"request": request})
+#

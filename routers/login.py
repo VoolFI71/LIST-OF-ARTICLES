@@ -42,7 +42,7 @@ async def login_user(response: Response, request: Request, nick: str = Form(...)
 
         if user[1] != hash_password(password):
             raise HTTPException(status_code=401, detail="Incorrect password")
-        token = jwt.encode({"sub": nick, "exp": int(time.time()) + 240}, secret_key, algorithm='HS256')
+        token = jwt.encode({"sub": nick, "exp": int(time.time()) + 30}, secret_key, algorithm='HS256')
 
         await db.execute("UPDATE logins SET token=? WHERE nick=?", (token, nick))
         await db.commit()

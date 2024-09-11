@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>Пользователи</title>
 </head>
 <body>
+    <h1>kekekk</h1>
+    <a href="http://127.0.0.1:8000/"><button>To main</button></a>
 
     {% if nick%}
     <header class="header">
@@ -16,7 +18,6 @@
             async function deleteToken() {
                 const cookieName = 'jwt';
                 document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;';
-
                 window.location.href = "http://127.0.0.1:8000/";
             }
         </script>
@@ -49,7 +50,6 @@
         ws.onopen = function(e) {
             ws.send(document.cookie);
         }
-
         ws.onmessage = function(event) {
             var message = JSON.parse(event.data);
             if (message.user_count !== undefined) {
@@ -59,6 +59,5 @@
             }
         };
     </script>
-
 </body>
 </html>

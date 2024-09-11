@@ -64,7 +64,14 @@ def get_lists(nick: str, response: Response, request: Request):
 
 @router_lists.get("/create/list")
 def page_of_create_list(request: Request):
-    return templates.TemplateResponse("create_lists.html", {"request": request})
+    token = request.cookies.get("jwt")
+    if not token:
+        return templates.TemplateResponse("create_lists.html", {"request": request})
+    try:
+        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
+    except:
+        return templates.TemplateResponse("create_lists.html", {"request": request})
+    return templates.TemplateResponse("create_lists.html", {"request": request, "nick": payload["sub"]})
 
 @router_lists.post("/create/list")
 def page_of_create_list(list: model_list, request: Request):

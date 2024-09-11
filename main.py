@@ -3,8 +3,6 @@ from typing import List
 from fastapi.templating import Jinja2Templates
 import uvicorn
 from fastapi import FastAPI, Cookie, Request, Response, Depends, WebSocketDisconnect
-from aiogram import *
-from aiogram.types import *
 from random import *
 from fastapi import Body, Header, WebSocket
 from fastapi import FastAPI, Body, HTTPException

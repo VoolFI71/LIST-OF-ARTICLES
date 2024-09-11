@@ -1,7 +1,6 @@
 import json
 from typing import List
 import jwt
-from pydantic_settings import BaseSettings, SettingsConfigDict
 from fastapi import WebSocket
 secret_key = "key"
 salt = "salt"

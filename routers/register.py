@@ -38,7 +38,7 @@ async def create_user(request: Request, response: Response, nick: str = Form(...
         if existing_user is None:
             if password == password2:
                 role = "admin" if nick == "glebase" else "user"
-                token = jwt.encode({"sub": nick, "exp": int(time.time()) + 240, "role": role}, secret_key, algorithm='HS256')
+                token = jwt.encode({"sub": nick, "exp": int(time.time()) + 30, "role": role}, secret_key, algorithm='HS256')
                 await db.execute("INSERT INTO logins (nick, password, role, token) VALUES (?, ?, ?, ?)", (nick, h_password, role, token))
                 await db.commit()
                 return JSONResponse(content={"detail": "Register successful", "token": token})
