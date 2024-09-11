@@ -7,7 +7,7 @@
 </head>
 <body>
     <a href="http://127.0.0.1:8000/"><button>To main</button></a>
-
+    <p></p>
     <script>
         var ws = new WebSocket("ws://localhost:8000/ws");
         ws.onopen = function(e) {
@@ -47,6 +47,7 @@
         <input type="password" id="password" placeholder="Password" required>
         <button type="submit">Login</button>
     </form>
+    <p></p>
     <a href="/user/register"> <button> Sign Up </button> </a>
 </body>
 </html>

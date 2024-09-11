@@ -10,7 +10,7 @@
     <p></p>
     {% if nick %}
     <header class="header">
-        <div class="name">
+        <div class="name" id ="name">
             {{ nick }}
             <p></p>
         </div>
@@ -26,19 +26,51 @@
 
         <button onclick="deleteToken()">Logout</button>
     </header>
+    <script>
+        async function changePhoto() {
+            const photoInput = document.getElementById("photo");
+            const username = document.getElementById("name").textContent.trim();
+            const formData = new FormData();
+            formData.append("file", photoInput.files[0]);
+            formData.append("username", username);
+            formData.append("text1", "");
+            formData.append("text2", "");
+            formData.append("text3", "");
+            formData.append("text4", "");
 
-    <form action="">
+            const response = await fetch("/settings", {
+                method: "POST",
+                body: formData
+            });
+
+            
+            if (response.ok){
+                console.log("ok")
+
+            } else {
+                console.log("error")
+            }
+        }
+    </script>
+
+    <form onsubmit="event.preventDefault(); changePhoto();">
+        <p>Аватарка <input type="file" name="photo" id="photo" required></p>
+        <button type="submit">Сохранить</button>
+    </form>
+
+    <form onsubmit="event.preventDefault(); changeData();"></form>
         <p>Имя <input type="text" name="name" id="name" required></p>
         <p>Почта <input type="text" name="email" id="email"></p>
         <p>Возраст <input type="text" name="age" id="age" required></p>
         <p>Город <input type="text" name="city" id="city"></p>
-        <p>Фотка <input type="file" name="photo" id="photo"></p>
         <button type="submit">Сохранить</button>
     </form>
+
     {% else %}
     <a href="/user/login"> <button> Sign In </button> </a>
     <p></p>
     <a href="/user/register"> <button> Sign Up </button> </a>
     {% endif %}
+
 </body>
 </html>

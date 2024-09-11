@@ -3,6 +3,8 @@ from pydantic_models import Reg_User, User as model_user
 import sqlite3
 import jwt
 import time
+import shutil
+import os
 from config import secret_key, salt
 import hashlib
 from fastapi.templating import Jinja2Templates
@@ -38,9 +40,14 @@ async def create_user(request: Request, response: Response, nick: str = Form(...
         if existing_user is None:
             if password == password2:
                 role = "admin" if nick == "glebase" else "user"
-                token = jwt.encode({"sub": nick, "exp": int(time.time()) + 30, "role": role}, secret_key, algorithm='HS256')
+                token = jwt.encode({"sub": nick, "exp": int(time.time()) + 300, "role": role}, secret_key, algorithm='HS256')
                 await db.execute("INSERT INTO logins (nick, password, role, token) VALUES (?, ?, ?, ?)", (nick, h_password, role, token))
                 await db.commit()
+                image_path = os.path.abspath('default.png') #путь до картинки
+                images_path = os.path.abspath('front/avatars') #путь до картинок
+                name_file = str(nick) + ".png" #название картинки
+                new_images_path = os.path.join(images_path, name_file)
+                shutil.copy2(image_path, new_images_path)
                 return JSONResponse(content={"detail": "Register successful", "token": token})
             else:
                 return JSONResponse(content={"detail": "Пароли не совпадают"}, status_code=400)
