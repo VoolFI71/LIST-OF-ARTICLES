@@ -51,9 +51,11 @@ manager = ConnectionManager()
 def get_token_from_cookie(cookie_string: str):
     cookies = cookie_string.split('; ')
     for cookie in cookies:
-        name, value = cookie.split('=')
-        if name == 'jwt':
-            return value
+        parts = cookie.split("=")
+        if len(parts) == 2:
+            name, value = parts
+            if name == 'jwt':
+                return value
     return None
 
 @app.websocket("/ws")
