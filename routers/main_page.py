@@ -18,3 +18,4 @@ def main(request: Request):
         return templates.TemplateResponse("main.html", {"request": request})
 
     return templates.TemplateResponse("main.html", {"request": request, "nick": payload["sub"]})
+

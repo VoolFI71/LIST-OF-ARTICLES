@@ -21,7 +21,7 @@
 
     {% if nick %}
     <header class="header">
-        <div class="name">
+        <div class="name" id="name">
             {{ nick }}
             <p></p>
         </div>
@@ -30,7 +30,7 @@
             async function deleteToken() {
                 const cookieName = 'jwt';
                 document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;';
-                window.location.href = `http://127.0.0.1:8000/profile/${nick}`;
+                window.location.href = `http://127.0.0.1:8000/`;
             }
         </script>
 
@@ -51,9 +51,37 @@
 
     <div class="container">
         <div class="user-profile">
-            <img src="avatar.jpg" alt="Аватар пользователя" class="avatar">
+            <img alt="Аватар пользователя" id="avatar">
+            <script>
+                    const currentUrl = window.location.href;
+
+                    const url = new URL(currentUrl);
+                    let name = url["pathname"].split("/")
+                    let size = name.length;
+                    if (name) {
+                        fetch(`avatars/${name[size-1]}`)
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error('Сеть ответила с ошибкой: ' + response.status);
+                                }
+                                return response.blob();
+                            })
+                            .then(blob => {
+                                const url = URL.createObjectURL(blob);
+                                const img = document.getElementById('avatar');
+                                img.src = url;
+                                img.style.display = 'block';
+                            })
+                            .catch(error => {
+                                console.error('Произошла ошибка:', error);
+                            });
+                    } else {
+                        console.error('Имя пользователя не указано в URL');
+                    }
+            </script>
+
             <h1 class="username">Никнейм - {{response[0]}}</h1>
-            <h1 class="username">Роль - {{response[2]}} </h1>
+            <h1 class="user=name">Роль - {{response[2]}} </h1>
             <p class="bio">Краткая информация о пользователе. Здесь можно написать о своих интересах, хобби и т.д.</p>
             <div class="user-details">
                 <p><strong>Email:</strong> user@example.com</p>

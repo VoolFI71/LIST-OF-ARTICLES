@@ -1,6 +1,8 @@
 import json
 from typing import List
 from fastapi.templating import Jinja2Templates
+from fastapi import Path
+from fastapi.responses import FileResponse
 import uvicorn
 from fastapi import FastAPI, Cookie, Request, Response, Depends, WebSocketDisconnect
 from random import *
@@ -23,6 +25,7 @@ from config import secret_key
 from routers.main_page import main_page_router as router_main_page
 from config import ConnectionManager
 from routers.setting_profile import setting_profile_router
+import os
 app = FastAPI()
 
 templates = Jinja2Templates(directory="front/templates")
@@ -92,3 +95,12 @@ async def websocket_endpoint(websocket: WebSocket):
     else:
         print("No token provided, closing connection.")
         await websocket.close()
+
+
+@app.get("/profile/avatars/{nick}")
+def main(nick: str = Path(...)):
+    image_path = os.path.abspath(f"front/avatars/{nick}.png")
+    if os.path.exists(image_path):
+        return FileResponse(image_path)
+    else:
+        return {"error": "Image not found"}, 404

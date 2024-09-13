@@ -18,7 +18,7 @@
     {% if nick %}
     <header class="header">
         
-        <div class="name">
+        <div class="name" id="name">
             {{ nick }}
             <p></p>
         </div>
@@ -27,7 +27,7 @@
             async function deleteToken() {
                 const cookieName = 'jwt';
                 document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;';
-                window.location.href = "http://127.0.0.1:8000/";
+                window.location.href = `http://127.0.0.1:8000/profile/${nick}`;
             }
         </script>
         <button onclick="deleteToken()">Logout</button>
@@ -40,7 +40,14 @@
     {% endif %}
 
     <a href="/users"><p>/users - Посмотреть количество авторизованных пользователей на сайте</p></a>
-    <a href="/profile/user"><p>/profile/{user} - Профиль юзера</p></a>
+    <a id="profile"><p>/profile/{user} - Профиль юзера</p></a>
+
+    <script>
+        const name = document.getElementById("name").textContent.trim();
+        const profileLink = document.getElementById('profile');
+        profileLink.href = `/profile/${name}`;
+    </script>
+
     <a href="/user/login"><p>/user/login - Войти в аккаунт</p></a>
     <a href="/user/register"><p>/user/register - Создать аккаунт</p></a>
     <a href="/user/delete"><p>/user/delete - Удалить юзера(Для админа)</p></a>
