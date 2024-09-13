@@ -4,32 +4,22 @@ import jwt
 import time
 from config import secret_key
 from fastapi.templating import Jinja2Templates
-from fastapi import Request, Form
+from fastapi import Request, Form, Depends
 from fastapi.responses import JSONResponse
 from fastapi.responses import HTMLResponse, RedirectResponse
 from routers.auth import hash_password
-router_login = APIRouter()
-templates = Jinja2Templates(directory="front/templates")
+from config import check_token
 import aiosqlite
 
+router_login = APIRouter()
 
+templates = Jinja2Templates(directory="front/templates")
 
 @router_login.get("/user/login", response_class=HTMLResponse)
-async def page_login_user(request: Request, response: Response):
-    token = request.cookies.get("jwt")
-    if not token:
+async def page_login_user(request: Request, response: Response, nick: str = Depends(check_token)):
+    if nick is None:
         return templates.TemplateResponse("login.html", {"request": request})
-    try:
-        payload = jwt.decode(token.encode(), secret_key, algorithms=['HS256'])
-    except jwt.exceptions.ExpiredSignatureError:
-         return templates.TemplateResponse("login.html", {"request": request})
-    with aiosqlite.connect("db/database.db") as db:
-        async with db.execute("SELECT * FROM logins WHERE token=?", (token,)) as cursor:
-            user = await cursor.fetchone()
-        if user is None:
-            return templates.TemplateResponse("login.html", {"request": request})
-        else:
-            return RedirectResponse(url="/", status_code=302)
+    return RedirectResponse(url="/", status_code=302)
 
 @router_login.post("/user/login")
 async def login_user(response: Response, request: Request, nick: str = Form(...), password: str = Form(...)):

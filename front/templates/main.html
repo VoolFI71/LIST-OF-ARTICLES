@@ -25,9 +25,11 @@
 
         <script>
             async function deleteToken() {
+                
+                const nick = document.getElementById("name").textContent.trim();
                 const cookieName = 'jwt';
                 document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;';
-                window.location.href = `http://127.0.0.1:8000/profile/${nick}`;
+                window.location.href = `http://127.0.0.1:8000/`;
             }
         </script>
         <button onclick="deleteToken()">Logout</button>
@@ -40,7 +42,7 @@
     {% endif %}
 
     <a href="/users"><p>/users - Посмотреть количество авторизованных пользователей на сайте</p></a>
-    <a id="profile"><p>/profile/{user} - Профиль юзера</p></a>
+    <a id="profile" href="profile/glebase"><p>/profile/{user} - Профиль юзера</p></a>
 
     <script>
         const name = document.getElementById("name").textContent.trim();

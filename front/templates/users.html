@@ -5,8 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>Пользователи</title>
 </head>
 <body>
-    <a href="http://127.0.0.1:8000/"><button>To main</button></a>
-    <p></p>
+    <a href="http://127.0.0.1:8000/"><button>To main</button></a> <p></p>
+
+    <script>
+        async function sendCookie() {
+            const ws = new WebSocket("ws://localhost:8000/ws");
+                await new Promise((resolve) => {
+                ws.onopen = function(e) {
+                    resolve();
+                };
+            });
+            ws.send(document.cookie);
+        }
+    
+        sendCookie();
+    </script>
+
+
     {% if nick %}
     <header class="header">
         <div class="name">

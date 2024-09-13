@@ -8,27 +8,21 @@ import os
 from config import secret_key, salt
 import hashlib
 from fastapi.templating import Jinja2Templates
-from fastapi import Request, Form
+from fastapi import Request, Form, Depends
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from routers.auth import hash_password
-router_reg= APIRouter()
-templates = Jinja2Templates(directory="front/templates")
+from config import check_token
 import aiosqlite
 
+router_reg= APIRouter()
+templates = Jinja2Templates(directory="front/templates")
 
 @router_reg.get("/user/register", response_class=HTMLResponse)
-def create_user(request: Request):
-
-    token = request.cookies.get("jwt")
-    if not token:
+def create_user(request: Request, nick: str = Depends(check_token)):
+    if nick is None:
         return templates.TemplateResponse("register.html", {"request": request})
-    try:
-        payload = jwt.decode(token.encode(), secret_key, algorithms=['HS256'])
-        return RedirectResponse(url="/users", status_code=302)
-    except:
-        return templates.TemplateResponse("register.html", {"request": request})
+    return RedirectResponse(url="/users", status_code=302)
 
 
 @router_reg.post("/user/register")
@@ -43,9 +37,9 @@ async def create_user(request: Request, response: Response, nick: str = Form(...
                 token = jwt.encode({"sub": nick, "exp": int(time.time()) + 300, "role": role}, secret_key, algorithm='HS256')
                 await db.execute("INSERT INTO logins (nick, password, role, token) VALUES (?, ?, ?, ?)", (nick, h_password, role, token))
                 await db.commit()
-                image_path = os.path.abspath('default.png') #путь до картинки
-                images_path = os.path.abspath('front/avatars') #путь до картинок
-                name_file = str(nick) + ".png" #название картинки
+                image_path = os.path.abspath('default.png') # path to default image
+                images_path = os.path.abspath('front/avatars') # path to new image
+                name_file = str(nick) + ".png" #name of image
                 new_images_path = os.path.join(images_path, name_file)
                 shutil.copy2(image_path, new_images_path)
                 return JSONResponse(content={"detail": "Register successful", "token": token})

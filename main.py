@@ -21,7 +21,7 @@ from routers.register import router_reg
 from routers.profile import router_profile
 from routers.users import router_users
 from routers.lists import router_lists
-from config import secret_key
+from config import secret_key, check_token, check_token_ws
 from routers.main_page import main_page_router as router_main_page
 from config import ConnectionManager
 from routers.setting_profile import setting_profile_router
@@ -51,50 +51,31 @@ app.include_router(setting_profile_router)
 
 manager = ConnectionManager()
 
-def get_token_from_cookie(cookie_string: str):
-    cookies = cookie_string.split('; ')
-    for cookie in cookies:
-        parts = cookie.split("=")
-        if len(parts) == 2:
-            name, value = parts
-            if name == 'jwt':
-                return value
-    return None
-
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    cookie_string = await websocket.receive_text()
-    token = get_token_from_cookie(cookie_string)
     connection_closed = False
-    if token:
-        try:
-            payload = jwt.decode(token, secret_key, algorithms=['HS256'])
-            await manager.connect(token, websocket)
+    try:
+        token = await websocket.receive_text()  # Получаем токен из сообщения
+        nick = await check_token_ws(token)  # Проверяем токен
+        if nick:
+            await manager.connect(nick, websocket)
             while True:
                 data = await websocket.receive_text()
                 await manager.broadcast(data)
-        except jwt.ExpiredSignatureError:
-            print("Токен истек, закрываю соединение.")
+        else:
+            print("Токен не предоставлен, закрываем соединение.")
             await websocket.close()
+
+    except WebSocketDisconnect:
+        if not connection_closed:
+            await manager.disconnect(nick, websocket)
             connection_closed = True
-        except jwt.PyJWTError as e:
-            print(f"Ошибка JWT: {e}")
-            if not connection_closed:
-                await websocket.close()
-                connection_closed = True
-        except WebSocketDisconnect:
-            if not connection_closed:
-                await manager.disconnect(token, websocket)
-                connection_closed = True
-        except Exception as e:
-            print(f"Ошибка при получении сообщения: {e}")
-            if not connection_closed:
-                await manager.disconnect(token, websocket)
-                connection_closed = True
-    else:
-        print("No token provided, closing connection.")
-        await websocket.close()
+    except Exception as e:
+        print(f"Ошибка при получении сообщения: {e}")
+        if not connection_closed:
+            await manager.disconnect(nick, websocket)
+            connection_closed = True
 
 
 @app.get("/profile/avatars/{nick}")

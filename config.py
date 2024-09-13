@@ -1,7 +1,6 @@
-import json
+import json, jwt
 from typing import List
-import jwt
-from fastapi import WebSocket
+from fastapi import WebSocket, Request
 secret_key = "key"
 salt = "salt"
 
@@ -11,27 +10,48 @@ DB_PORT = 5432
 DB_USER= "dbUser"
 DB_PASSWORD="1234"
 
+async def check_token(request: Request):
+    token = request.cookies.get("jwt")
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
+        return payload["sub"]
+    except jwt.PyJWTError:
+        return None
+
+async def check_token_ws(token: str):
+    token = token[4:]
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
+        return payload["sub"]
+    except jwt.ExpiredSignatureError:
+        print("Токен истек.")
+        return None
+    except jwt.InvalidTokenError as e:
+        print(f"Неверный токен: {e}")
+        return None
 
 class ConnectionManager:
     def __init__(self) -> None:
         self.active_connections: list[WebSocket] = []
         self.active_nicks2: dict[str, int] = {}
 
-    async def connect(self, token: str, websocket: WebSocket):
-        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
+    async def connect(self, nick: str, websocket: WebSocket):
         self.active_connections.append(websocket)
-        if payload["sub"] not in self.active_nicks2:
-            self.active_nicks2[payload["sub"]] = 0
-        self.active_nicks2[payload["sub"]] += 1
+        if nick not in self.active_nicks2:
+            self.active_nicks2[nick] = 0
+        self.active_nicks2[nick] += 1
         await self.broadcast_user_count()
 
-    async def disconnect(self, token, websocket: WebSocket):
+    async def disconnect(self, nick: str, websocket: WebSocket):
         self.active_connections.remove(websocket)
-        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
-        if payload["sub"] in self.active_nicks2:
-            self.active_nicks2[payload["sub"]] -= 1
-            if self.active_nicks2[payload["sub"]] == 0:
-                del self.active_nicks2[payload["sub"]]
+        if nick in self.active_nicks2:
+            self.active_nicks2[nick] -= 1
+            if self.active_nicks2[nick] == 0:
+                del self.active_nicks2[nick]
         await self.broadcast_user_count()
 
     async def send_personal_message(self, message: str, websocket: WebSocket):

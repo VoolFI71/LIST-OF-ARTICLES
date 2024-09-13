@@ -27,7 +27,7 @@
             async function deleteToken() {
                 const cookieName = 'jwt';
                 document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;';
-                window.location.href = "http://127.0.0.1:8000/delete";
+                window.location.href = "http://127.0.0.1:8000/user/delete";
             }
         </script>
 
@@ -39,6 +39,7 @@
     <a href="/user/login"> <button> Sign In </button> </a>
     <p></p>
     <a href="/user/register"> <button> Sign Up </button> </a>
+    <p></p>
     {% endif %}
 
     <form id="deleteUserForm">

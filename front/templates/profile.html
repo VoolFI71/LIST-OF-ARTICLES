@@ -30,7 +30,9 @@
             async function deleteToken() {
                 const cookieName = 'jwt';
                 document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;';
-                window.location.href = `http://127.0.0.1:8000/`;
+                const currentUrl = window.location.href;
+                const url = new URL(currentUrl);
+                window.location.href = url;
             }
         </script>
 
@@ -70,6 +72,8 @@
                                 const url = URL.createObjectURL(blob);
                                 const img = document.getElementById('avatar');
                                 img.src = url;
+                                img.style.width = '200px';  // Устанавливаем ширину
+                                img.style.height = '200px'
                                 img.style.display = 'block';
                             })
                             .catch(error => {

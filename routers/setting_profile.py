@@ -1,9 +1,7 @@
 from fastapi import APIRouter, HTTPException, Response
 from pydantic_models import Reg_User, User as model_user
-import sqlite3
-import jwt
-import time
-from config import secret_key, salt
+import sqlite3, jwt, time
+from config import secret_key, salt, check_token
 import hashlib
 from fastapi.templating import Jinja2Templates
 from fastapi import Request, Form
@@ -11,22 +9,17 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from fastapi.responses import HTMLResponse, RedirectResponse
 from routers.auth import hash_password
-from fastapi import UploadFile, File
+from fastapi import UploadFile, File, Depends
 from pathlib import Path
 import os
 setting_profile_router = APIRouter()
 templates = Jinja2Templates(directory="front/templates")
 
 @setting_profile_router.get("/settings")
-def setting_profile(request: Request):
-    token = request.cookies.get("jwt")
-    if not token:
+def setting_profile(request: Request, nick: str = Depends(check_token)):
+    if nick is None:
         return templates.TemplateResponse("settings_profile.html", {"request": request})
-    try:
-        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
-    except:
-        return templates.TemplateResponse("settings_profile.html", {"request": request})
-    return templates.TemplateResponse("settings_profile.html", {"request": request, "nick": payload["sub"]})
+    return templates.TemplateResponse("settings_profile.html", {"request": request, "nick": nick})
 
 def find_files(directory, pattern):
     path = Path(directory)

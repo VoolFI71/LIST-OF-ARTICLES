@@ -1,26 +1,18 @@
-from fastapi import APIRouter, Form, HTTPException, Request, Response
+from fastapi import APIRouter, Form, HTTPException, Request, Response, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 import sqlite3
 import jwt
-from config import secret_key
+from config import secret_key, check_token
 router_delete_user = APIRouter()
 
 templates = Jinja2Templates(directory="front/templates")
 
-
-
-
 @router_delete_user.get("/user/delete/", response_class=HTMLResponse)
-def delete_user(request: Request):
-    token = request.cookies.get("jwt")
-    if not token:
+def delete_user(request: Request, nick: str = Depends(check_token)):
+    if nick is None:
         return templates.TemplateResponse("delete.html", {"request": request})
-    try:
-        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
-    except:
-        return templates.TemplateResponse("delete.html", {"request": request})
-    return templates.TemplateResponse("delete.html", {"request": request, "nick": payload["sub"]})
+    return templates.TemplateResponse("delete.html", {"request": request, "nick": nick})
 
 @router_delete_user.post("/user/delete/")
 def delete_user(request: Request, nick: str = Form(...)):

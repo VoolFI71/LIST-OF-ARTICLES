@@ -21,73 +21,52 @@ from fastapi import FastAPI, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi import Request
-from routers.auth import check_token
 from pydantic_models import List as model_list
+from config import check_token
 router_lists = APIRouter()
 
 templates = Jinja2Templates(directory="front/templates")
 
 @router_lists.get("/lists")
-def get_lists(response: Response, request: Request):
+def get_lists(response: Response, request: Request, nick: str = Depends(check_token)):
     with sqlite3.connect("db/database.db") as db:
         cursor = db.cursor()
         cursor.execute("SELECT * FROM lists")
         rows = cursor.fetchall()
         respons = [row for row in rows]
-    token = request.cookies.get("jwt")
-    if token:
-        try:
-            payload = jwt.decode(token.encode(), secret_key, algorithms=['HS256'])
-            return templates.TemplateResponse("lists.html", {"request": request, "response": respons, "nick": payload["sub"]})
-        except:
-            return templates.TemplateResponse("lists.html", {"request": request, "response": respons})
-    else:
+    if nick is None:
         return templates.TemplateResponse("lists.html", {"request": request, "response": respons})
+    return templates.TemplateResponse("lists.html", {"request": request, "response": respons, "nick": nick})
 
 @router_lists.get("/lists/{nick}")
-def get_lists(nick: str, response: Response, request: Request):
+def get_lists(response: Response, request: Request, nick: str = Depends(check_token)):
     with sqlite3.connect("db/database.db") as db:
         cursor = db.cursor()
         cursor.execute("SELECT * FROM lists WHERE nick=?", (nick,))
         rows = cursor.fetchall()
         respons = [row for row in rows]
-    token = request.cookies.get("jwt")
-    if token:
-        try:
-            payload = jwt.decode(token.encode(), secret_key, algorithms=['HS256'])
-            return templates.TemplateResponse("user_lists.html", {"request": request, "response": respons, "nick": payload["sub"]})
-        except:
-            return templates.TemplateResponse("user_lists.html", {"request": request, "response": respons})
-    else:
+    if nick is None:
         return templates.TemplateResponse("user_lists.html", {"request": request, "response": respons})
+    return templates.TemplateResponse("user_lists.html", {"request": request, "response": respons, "nick": nick})
+
 
 
 @router_lists.get("/create/list")
-def page_of_create_list(request: Request):
-    token = request.cookies.get("jwt")
-    if not token:
+def page_of_create_list(request: Request, nick: str = Depends(check_token)):
+    if nick is None:
         return templates.TemplateResponse("create_lists.html", {"request": request})
-    try:
-        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
-    except:
-        return templates.TemplateResponse("create_lists.html", {"request": request})
-    return templates.TemplateResponse("create_lists.html", {"request": request, "nick": payload["sub"]})
+    return templates.TemplateResponse("create_lists.html", {"request": request, "nick": nick})
+
 
 @router_lists.post("/create/list")
-def page_of_create_list(list: model_list, request: Request):
-    token = request.cookies.get("jwt")
-    if not token or not(check_token(token)):
-        return JSONResponse(content={"detail": "Сначала нужно войти в аккаунт"})
-    try:
-        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
+def page_of_create_list(list: model_list, request: Request, nick: str = Depends(check_token)):
+    if nick is None:
+        raise HTTPException(status_code=401, detail=f"Сначала нужно войти в аккаунт: {str(e)}")
+    try:        
         with sqlite3.connect("db/database.db") as db:
             cursor = db.cursor()
-            cursor.execute("INSERT INTO lists (nick, title, description) VALUES (?, ?, ?)", (payload["sub"], list.title, list.description))
+            cursor.execute("INSERT INTO lists (nick, title, description) VALUES (?, ?, ?)", (nick, list.title, list.description))
             db.commit()
             return JSONResponse(content={"detail": "Пост успешно создан"})
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=403, detail="JWT токен больше не работает, зайдите в аккаунт заново")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=403, detail="Invalid JWT token")
-    except sqlite3.Error as e:
-        raise HTTPException(status_code=500, detail=f"Ошибка в базе данных: {str(e)}")
+    except: 
+        raise HTTPException(status_code=401, detail=f"Ошибка: {str(e)}")
