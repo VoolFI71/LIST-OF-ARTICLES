@@ -5,15 +5,10 @@ from fastapi import Path
 from fastapi.responses import FileResponse
 import uvicorn
 from fastapi import FastAPI, Cookie, Request, Response, Depends, WebSocketDisconnect
-from random import *
 from fastapi import Body, Header, WebSocket
-from fastapi import FastAPI, Body, HTTPException
-from random import *
-from uuid import uuid4
-import jwt
+from fastapi import HTTPException
 from routers.auth import router_auth
 from routers.delete_user import router_delete_user
-from fastapi import FastAPI, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from routers.login import router_login
@@ -21,9 +16,8 @@ from routers.register import router_reg
 from routers.profile import router_profile
 from routers.users import router_users
 from routers.lists import router_lists
-from config import secret_key, check_token, check_token_ws
+from config import secret_key, check_token, check_token_ws, ConnectionManager
 from routers.main_page import main_page_router as router_main_page
-from config import ConnectionManager
 from routers.setting_profile import setting_profile_router
 import os
 app = FastAPI()

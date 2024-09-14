@@ -22,7 +22,7 @@ templates = Jinja2Templates(directory="front/templates")
 def create_user(request: Request, nick: str = Depends(check_token)):
     if nick is None:
         return templates.TemplateResponse("register.html", {"request": request})
-    return RedirectResponse(url="/users", status_code=302)
+    return RedirectResponse(url="/", status_code=302)
 
 
 @router_reg.post("/user/register")

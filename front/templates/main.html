@@ -8,12 +8,13 @@
 <body>
     <a href="http://127.0.0.1:8000/"><button>To main</button></a>
     <p></p>
-    <script>
-        var ws = new WebSocket("ws://localhost:8000/ws");
-        ws.onopen = function(e) {
-            ws.send(document.cookie);
-        }
+    
+    <script src="/static/script.js">
+        sendCookie();
     </script>
+
+    <script src="/static/script.js"></script>
+
 
     {% if nick %}
     <header class="header">
