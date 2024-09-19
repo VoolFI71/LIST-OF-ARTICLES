@@ -6,7 +6,7 @@
 </head>
 <body>
     <a href="http://127.0.0.1:8000/"><button>To main</button></a> <p></p>
-    
+
     <script src="/static/script.js">
         sendCookie();
     </script>
@@ -58,5 +58,22 @@
             }
         };
     </script>
+
+    <script src="/static/script_chat.js"></script>
+
+
+    <div id="chat">
+        <p>Общий чат</p>
+        <div id="messages">
+            {% for message in messages %}
+                <p> {{message[0]}} </p>
+            {% endfor %}
+        </div>
+        <form action="" onsubmit="sendMessage(event); event.preventDefault();">
+            <input type="text" id="messageInput" required>
+            <button type="submit">Отправить</button>
+        </form>
+        
+    </div>
 </body>
 </html>

@@ -20,9 +20,12 @@ async def get_users(request: Request, response: Response, nick: str = Depends(ch
     async with aiosqlite.connect("db/database.db") as db:
         async with db.execute("SELECT * FROM logins") as cursor:
             rows = await cursor.fetchall()
+    async with aiosqlite.connect("db/database.db") as db:
+        async with db.execute("SELECT * FROM chat ORDER BY id LIMIT 20") as cursor:
+            messages = await cursor.fetchall()
     if nick is None:
-        return templates.TemplateResponse("users.html", {"request": request, "users": rows})
-    return templates.TemplateResponse("users.html", {"request": request, "users": rows, "nick": nick})
+        return templates.TemplateResponse("users.html", {"request": request, "messages": messages, "users": rows})
+    return templates.TemplateResponse("users.html", {"request": request, "users": rows, "messages": messages, "nick": nick})
 
 @router_users.get("/admin/users")
 async def get_users():

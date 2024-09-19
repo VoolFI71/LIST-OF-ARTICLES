@@ -1,5 +1,6 @@
-import json, jwt
+import json, jwt, redis
 from typing import List
+from pydantic_models import Message
 from fastapi import WebSocket, Request
 secret_key = "key"
 salt = "salt"
@@ -9,6 +10,8 @@ DB_HOST="localhost"
 DB_PORT = 5432
 DB_USER= "dbUser"
 DB_PASSWORD="1234"
+
+redis_client = redis.Redis(host='localhost', port=6379, db=0)
 
 async def check_token(request: Request):
     token = request.cookies.get("jwt")
@@ -66,3 +69,18 @@ class ConnectionManager:
         print(count2)
         message = json.dumps({"user_count": len(count2)})
         await self.broadcast(message)
+
+
+class ChatManager():
+    def __init__(self) -> None:
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        self.active_connections.append(websocket)
+
+    async def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: Message):
+        for connections in self.active_connections:
+            await connections.send_text(message.message)

@@ -23,6 +23,10 @@ from fastapi.templating import Jinja2Templates
 from fastapi import Request
 from pydantic_models import List as model_list
 from config import check_token
+from db.database2 import engine
+from db.database2 import ss
+from sqlalchemy import text
+
 router_lists = APIRouter()
 
 templates = Jinja2Templates(directory="front/templates")
@@ -57,16 +61,25 @@ def page_of_create_list(request: Request, nick: str = Depends(check_token)):
         return templates.TemplateResponse("create_lists.html", {"request": request})
     return templates.TemplateResponse("create_lists.html", {"request": request, "nick": nick})
 
+#engine = create_engine('sqlite:///db/database2.db', echo=True)
+
+#ss = sessionmaker(engine)
+
 
 @router_lists.post("/create/list")
 def page_of_create_list(list: model_list, request: Request, nick: str = Depends(check_token)):
     if nick is None:
-        raise HTTPException(status_code=401, detail=f"Сначала нужно войти в аккаунт: {str(e)}")
+        raise HTTPException(status_code=401, detail=f"Сначала нужно войти в аккаунт")
     try:        
-        with sqlite3.connect("db/database.db") as db:
-            cursor = db.cursor()
-            cursor.execute("INSERT INTO lists (nick, title, description) VALUES (?, ?, ?)", (nick, list.title, list.description))
-            db.commit()
+        with ss() as session:
+            new_list = {
+                "nick": nick,           
+                "title": list.title,
+                "description": list.description
+            }
+            session.execute(text("INSERT INTO lists (nick, title, description) VALUES (:nick, :title, :description)"), new_list)
+            session.commit()
             return JSONResponse(content={"detail": "Пост успешно создан"})
-    except: 
+    except Exception as e: 
+        print(e)
         raise HTTPException(status_code=401, detail=f"Ошибка: {str(e)}")

@@ -26,17 +26,23 @@ def create_user(request: Request, nick: str = Depends(check_token)):
 
 
 @router_reg.post("/user/register")
-async def create_user(request: Request, response: Response, nick: str = Form(...), password: str = Form(...), password2: str = Form(...)):
-    async with aiosqlite.connect("db/database.db") as db:
+def create_user(
+    request: Request, 
+    response: Response, 
+    nick: str = Form(...), 
+    password: str = Form(...), 
+    password2: str = Form(...)
+):
+    with sqlite3.connect("db/database.db") as db:
         h_password = hash_password(password)
-        existing_user = await db.execute("SELECT * FROM logins WHERE nick=?", (nick,))
-        existing_user = await existing_user.fetchone()
+        existing_user = db.execute("SELECT * FROM logins WHERE nick=?", (nick,))
+        existing_user = existing_user.fetchone()
         if existing_user is None:
             if password == password2:
                 role = "admin" if nick == "glebase" else "user"
                 token = jwt.encode({"sub": nick, "exp": int(time.time()) + 300, "role": role}, secret_key, algorithm='HS256')
-                await db.execute("INSERT INTO logins (nick, password, role, token) VALUES (?, ?, ?, ?)", (nick, h_password, role, token))
-                await db.commit()
+                db.execute("INSERT INTO logins (nick, password, role) VALUES (?, ?, ?)", (nick, h_password, role))
+                db.commit()
                 image_path = os.path.abspath('default.png') # path to default image
                 images_path = os.path.abspath('front/avatars') # path to new image
                 name_file = str(nick) + ".png" #name of image

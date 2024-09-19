@@ -1,5 +1,7 @@
 from pydantic import BaseModel, UUID4
 
+class Message(BaseModel):
+    message: str
 
 class User(BaseModel):
     nick: str
