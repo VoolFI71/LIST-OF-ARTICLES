@@ -11,18 +11,18 @@ from uuid import uuid4
 from config import secret_key, check_token
 from fastapi.responses import HTMLResponse
 import aiosqlite
-
+from db.database2 import engine
+from db.database2 import ss
+from sqlalchemy import text
 router_users = APIRouter()
 templates = Jinja2Templates(directory="front/templates")
 
 @router_users.get("/users", response_class=HTMLResponse)
-async def get_users(request: Request, response: Response, nick: str = Depends(check_token)):
-    async with aiosqlite.connect("db/database.db") as db:
-        async with db.execute("SELECT * FROM logins") as cursor:
-            rows = await cursor.fetchall()
-    async with aiosqlite.connect("db/database.db") as db:
-        async with db.execute("SELECT * FROM chat ORDER BY id LIMIT 20") as cursor:
-            messages = await cursor.fetchall()
+def get_users(request: Request, response: Response, nick: str = Depends(check_token)):
+    with ss() as session:
+        rows = session.execute(text("SELECT * FROM logins")).fetchall()
+        messages = session.execute(text("SELECT * FROM chat ORDER BY id LIMIT 20")).fetchall()
+
     if nick is None:
         return templates.TemplateResponse("users.html", {"request": request, "messages": messages, "users": rows})
     return templates.TemplateResponse("users.html", {"request": request, "users": rows, "messages": messages, "nick": nick})

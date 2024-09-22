@@ -26,6 +26,7 @@ logins = Table(
     metadata_logins,
     Column("nick", String, primary_key=True),
     Column("password", String),
+    Column("role", String),
     Column("email", String),
     Column("city", String),
     Column("age", String),

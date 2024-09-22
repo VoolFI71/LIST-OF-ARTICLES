@@ -14,6 +14,9 @@ from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from routers.auth import hash_password
 from config import check_token
 import aiosqlite
+from db.database2 import engine
+from db.database2 import ss
+from sqlalchemy import text
 
 router_reg= APIRouter()
 templates = Jinja2Templates(directory="front/templates")
@@ -33,16 +36,16 @@ def create_user(
     password: str = Form(...), 
     password2: str = Form(...)
 ):
-    with sqlite3.connect("db/database.db") as db:
+    with ss() as session:
         h_password = hash_password(password)
-        existing_user = db.execute("SELECT * FROM logins WHERE nick=?", (nick,))
-        existing_user = existing_user.fetchone()
+        existing_user = session.execute(text("SELECT * FROM logins WHERE nick=:nick"), {"nick": nick}).scalar()
         if existing_user is None:
             if password == password2:
                 role = "admin" if nick == "glebase" else "user"
                 token = jwt.encode({"sub": nick, "exp": int(time.time()) + 300, "role": role}, secret_key, algorithm='HS256')
-                db.execute("INSERT INTO logins (nick, password, role) VALUES (?, ?, ?)", (nick, h_password, role))
-                db.commit()
+                session.execute(text("INSERT INTO logins (nick, password, role) VALUES (:nick, :password, :role)"), 
+                            {"nick": nick, "password": h_password, "role": role})
+                session.commit()
                 image_path = os.path.abspath('default.png') # path to default image
                 images_path = os.path.abspath('front/avatars') # path to new image
                 name_file = str(nick) + ".png" #name of image

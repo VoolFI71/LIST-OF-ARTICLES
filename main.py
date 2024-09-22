@@ -81,8 +81,6 @@ async def websocket_endpoint(websocket: WebSocket):
 
 @app.websocket("/ws/chat")
 async def websocket_chat(websocket: WebSocket):
-
-
     await websocket.accept()
     await manager_chat.connect(websocket)
     try:
@@ -96,9 +94,9 @@ async def websocket_chat(websocket: WebSocket):
         await websocket.close()
         print(f"Ошибка: {e}")
 
-metadata_chat.drop_all(engine)
+#metadata_chat.drop_all(engine)
 metadata_chat.create_all(engine)
-metadata_lists.drop_all(engine)
+#metadata_lists.drop_all(engine)
 metadata_lists.create_all(engine)
-metadata_logins.drop_all(engine)
+#metadata_logins.drop_all(engine)
 metadata_logins.create_all(engine)

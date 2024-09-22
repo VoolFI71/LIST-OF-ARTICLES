@@ -12,16 +12,17 @@ from fastapi.responses import JSONResponse
 from fastapi.responses import HTMLResponse, RedirectResponse
 from routers.auth import hash_password
 from config import check_token
-
+from db.database2 import engine
+from db.database2 import ss
+from sqlalchemy import text
 router_profile= APIRouter()
 templates = Jinja2Templates(directory="front/templates")
 
 @router_profile.get("/profile/{nick}")
 def get_profile(request: Request, name: str = Depends(check_token), nick: str = Path(...)):
-    with sqlite3.connect("db/database.db") as db:
-        cursor = db.cursor()
-        cursor.execute("SELECT * FROM logins WHERE nick=?", (nick,))
-        res = cursor.fetchone()
+    with ss() as session:
+        res = session.execute(text("SELECT * FROM logins WHERE nick=:nick"), {"nick": nick}).fetchone()
+
     if res is None:
         raise HTTPException(status_code=404, detail="User not found")
     if nick is None:
